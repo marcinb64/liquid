@@ -1,0 +1,26 @@
+* Version 0.1
+  - [X] Basic cross-compile build with toolchain file
+  - [X] Unit tests
+  - [X] Conan libs
+  - [ ] Export conan lib for avr
+  - [ ] Use conan lib for avr
+  - [ ] Test on target
+  - [ ] Readme file
+  
+* Notes
+** Configure and build unit tests
+   mkdir -p build.linux/conan
+   cd build.linux/conan
+   conan install ../.. --build=missing
+   cd ..
+   cmake ..
+   cmake --build . --target utest_core
+** Configure and build target
+   conan install ../conanfile-avr.txt --build=missing --profile=avr
+
+   mkdir -p build.avr
+   cd build.avr
+   cmake --toolchain ~/projects/_staging/avr-toolchain.cmake -DAVR_CPU=atmega168 ..
+   cmake --build .
+** Flashing
+   avrdude -c arduino -p m328p -P /dev/ttyUSB0 -F -U flash:w:demo.hex
