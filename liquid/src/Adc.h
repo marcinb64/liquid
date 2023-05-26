@@ -16,7 +16,7 @@ public:
     Adc &operator=(Adc &&other) = default;
 
     auto makeChannel(int channel) -> AdcChannel;
-    auto readRaw(int channel) const -> unsigned int;
+    auto readRaw(int channel) -> unsigned int;
 
 private:
     Impl *impl;
@@ -31,7 +31,7 @@ class AdcChannel
 {
 public:
     auto getRawRange() const -> unsigned int;
-    auto readRaw() const -> unsigned int;
+    auto readRaw() -> unsigned int;
     // auto readVoltage() const -> float;
 
 private:

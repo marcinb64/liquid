@@ -1,5 +1,4 @@
 #include <BoardSelector.h>
-// #include <Gpio.h>
 #include <Interrupts.h>
 #include <Sys.h>
 #include <Uart.h>
@@ -31,17 +30,14 @@ public:
 
     auto loop() -> void
     {
-        if (trigger) {
-            trigger = 0;
-            printf(".");
-        }
-
-        // echo();
+        _delay_ms(1000);
+        printf("ADC raw: %d\r\n", adc.readRaw(1));
     }
 
 private:
     Gpio  led = Board::makeGpio(Board::Gpio::BuiltInLed);
     Gpio  button = Board::makeGpio(Board::Gpio::D2);
+    Adc   adc = Board::makeAdc();
     
     volatile int trigger = 0;
 

@@ -8,7 +8,7 @@ auto AdcChannel::getRawRange() const -> unsigned int
     return 1024;
 }
 
-auto AdcChannel::readRaw() const -> unsigned int
+auto AdcChannel::readRaw() -> unsigned int
 {
     return owner->readRaw(channel);
 }

@@ -11,7 +11,6 @@ class AvrAdc
 private:
     const uint16_t base;
 
-    
     constexpr auto ADCSRA_addr() const -> uint16_t { return base + 2; }
     constexpr auto ADCSRA() const
     {
@@ -49,20 +48,45 @@ private:
         return Bits {ADMUX_addr()};
     }
 
-    constexpr static auto REFS_AREF = 0;
-    constexpr static auto REFS_AVCC = 1;
-    constexpr static auto REFS_INTERNAL_1V1 = 1;
-    constexpr static auto REFS_INTERNAL_2V56 = 1;
+    struct Refs {
+        static constexpr auto Aref = 0;
+        static constexpr auto Avcc = 1;
+        static constexpr auto Reserved1 = 2;
+        static constexpr auto Internal1V1 = 3;
+    };
+
+    constexpr auto ADCL_addr() const -> uint16_t { return base; }
+    inline auto ADCL() const { return sfr8(ADCL_addr()); }
+
+    constexpr auto ADCH_addr() const -> uint16_t { return base + 1; }
+    inline auto ADCH() const { return sfr8(ADCH_addr()); }
 
 public:
-    constexpr AvrAdc(uint16_t base_) : base(base_) {}
-
-    auto readRaw(int) const -> unsigned int
+    constexpr AvrAdc(uint16_t base_) : base(base_)
     {
         ADCSRA().ADEN = 1;
-        while (ADCSRA().ADEN == 1)
+        ADMUX().REFS = Refs::Avcc;
+    }
+
+    ~AvrAdc() { ADCSRA().ADEN = 0; }
+
+    auto inline selectChannel(int channel) -> void
+    {
+        ADCSRB().MUX5 = (channel >> 5) & 0x01;
+        ADMUX().MUX40 = channel & 0x1f;
+    }
+
+    auto readRaw(int channel) -> unsigned int
+    {
+        selectChannel(channel);
+
+        ADCSRA().ADSC = 1;
+        while (ADCSRA().ADSC == 1)
             ;
-        return 0;
+
+        uint8_t lo = ADCL();
+        uint8_t hi = ADCH();
+        return (hi << 8) | lo;
     }
 };
 
