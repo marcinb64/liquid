@@ -2,7 +2,6 @@
 #define LIQUID_GPIO2_H_
 
 #include "../Interrupts.h"
-#include "BoardSelector.h"
 
 namespace liquid
 {
@@ -10,77 +9,53 @@ namespace liquid
 // board-specific
 auto enableGpioInterrupts() -> void;
 
+struct AvrGpioRegs {
+    Sfr8 pin;
+    Sfr8 dir;
+    Sfr8 port;
+    Sfr8 irqMask;
+};
+
 class Gpio
 {
 public:
-    Gpio(int gpio_) : gpio(gpio_) {}
+    Gpio(const AvrGpioRegs &regs_, int gpio_)
+        : regs(regs_), pinMask(static_cast<uint8_t>(1 << (gpio_ % 8)))
+    {
+    }
 
     enum class Dir { In, Out };
-    enum class Pullup { None, PullUp, PullDown };
+    enum class Pullup { None, PullUp };
 
-    auto set(int value) -> void
-    {
-        auto &reg = gpioToPort(gpio);
-        auto  pin = gpioToPin(gpio);
-        setBit(reg, pin, value);
-    }
+    inline auto set(int value) -> void { writeByMask(regs.port, pinMask, value); }
 
-    auto setHigh() -> void
-    {
-        auto &reg = gpioToPort(gpio);
-        auto  pin = gpioToPin(gpio);
-        setBit(reg, pin, true);
-    }
+    inline auto setHigh() -> void { set(1); }
 
-    auto setLow() -> void
-    {
-        auto &reg = gpioToPort(gpio);
-        auto  pin = gpioToPin(gpio);
-        setBit(reg, pin, false);
-    }
+    inline auto setLow() -> void { set(0); }
 
-    auto toggle() -> void
-    {
-        auto &reg = gpioToPort(gpio);
-        auto  pin = gpioToPin(gpio);
-        reg ^= static_cast<uint8_t>(~(1 << pin));
-    }
+    inline auto toggle() -> void { regs.port ^= static_cast<uint8_t>(~pinMask); }
 
-    auto get() -> int
-    {
-        auto &reg = gpioToPinReg(gpio);
-        auto  pin = gpioToPin(gpio);
-        return reg & (1 << pin);
-    }
+    inline auto get() -> int { return regs.pin & pinMask; }
 
     auto asInput(Pullup pullup) -> void
     {
-        auto &dirReg = gpioToDirReg(gpio);
-        auto &reg = gpioToPort(gpio);
-        auto  pin = gpioToPin(gpio);
-
-        setBit(dirReg, pin, false);
-        setBit(reg, pin, pullup == Pullup::PullUp);
+        writeByMask(regs.dir, pinMask, 0);
+        writeByMask(regs.port, pinMask, pullup == Pullup::PullUp);
     }
 
-    auto asOutput() -> void
-    {
-        auto &dirReg = gpioToDirReg(gpio);
-        auto  pin = gpioToPin(gpio);
+    auto asOutput() -> void { writeByMask(regs.dir, pinMask, 1); }
 
-        setBit(dirReg, pin, true);
-    }
-
-    auto enableInterrupt() -> void
+    inline auto enableInterrupt() -> void
     {
-        setBit(gpioToIrqMaskReq(gpio), gpioToPcIntPin(gpio), true);
+        writeByMask(regs.irqMask, pinMask, 1);
         enableGpioInterrupts();
     }
 
-    auto disableInterrupt() -> void { setBit(gpioToIrqMaskReq(gpio), gpioToPcIntPin(gpio), false); }
+    inline auto disableInterrupt() -> void { writeByMask(regs.irqMask, pinMask, 0); }
 
 private:
-    const int gpio;
+    const AvrGpioRegs &regs;
+    const uint8_t      pinMask;
 };
 
 } // namespace liquid

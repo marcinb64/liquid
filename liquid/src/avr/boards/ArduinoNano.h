@@ -1,119 +1,89 @@
 #ifndef LIQUID_GENERIC_AVR_H_
 #define LIQUID_GENERIC_AVR_H_
 
+#include "../AdcImpl.h"
 #include "../UartImpl.h"
-#include <avr/io.h>
+
+#include "../Gpio.h"
 
 namespace liquid
 {
+
+static AvrGpioRegs portB {
+    sfr8(0x23),
+    sfr8(0x24),
+    sfr8(0x25),
+    sfr8(0x6b),
+};
+
+static AvrGpioRegs portC {
+    sfr8(0x26),
+    sfr8(0x27),
+    sfr8(0x28),
+    sfr8(0x6c),
+};
+
+static AvrGpioRegs portD {
+    sfr8(0x29),
+    sfr8(0x2a),
+    sfr8(0x2b),
+    sfr8(0x6d),
+};
 
 static constexpr auto portPin(int port, int pin) -> int
 {
     return port * 8 + pin;
 }
 
-constexpr auto gpioToPin(int gpio) -> int
-{
-    return gpio % 8;
-}
-
-constexpr auto gpioToDirReg(int gpio) -> Sfr8
-{
-    auto i = static_cast<uint8_t>(gpio / 8);
-    if (i == 0)
-        return DDRB;
-    else if (i == 1)
-        return DDRC;
-    else
-        return DDRD;
-}
-
-constexpr auto gpioToPort(int gpio) -> Sfr8
-{
-    auto i = static_cast<uint8_t>(gpio / 8);
-    if (i == 0)
-        return PORTB;
-    else if (i == 1)
-        return PORTC;
-    else
-        return PORTD;
-}
-
-inline auto gpioToPinReg(int gpio) -> Sfr8
-{
-    auto i = static_cast<uint8_t>(gpio / 8);
-    if (i == 0)
-        return PINB;
-    else if (i == 1)
-        return PINC;
-    else
-        return PIND;
-}
-
-inline auto gpioToIrqMaskReq(int gpio) -> Sfr8
-{
-    auto i = static_cast<uint8_t>(gpio / 8);
-    if (i == 0)
-        return PCMSK0;
-    else if (i == 1)
-        return PCMSK1;
-    else
-        return PCMSK2;
-}
-
-constexpr auto gpioToPcIntPin(int gpio) -> int
-{
-    return gpio % 8;
-}
-
 /* -------------------------------------------------------------------------- */
 
-struct ArduinoNano {
-    static constexpr auto PB = 0;
-    static constexpr auto PC = 1;
-    static constexpr auto PD = 2;
-
-    struct Gpio {
-        // Port B
-        static constexpr auto D8 = portPin(PB, 0);
-        static constexpr auto D9 = portPin(PB, 1);
-        static constexpr auto D10 = portPin(PB, 2);
-        static constexpr auto D11 = portPin(PB, 3);
-        static constexpr auto D12 = portPin(PB, 4);
-        static constexpr auto D13 = portPin(PB, 5);
-        // PB6 - XTAL
-        // PB7 - XTAL
-
-        // port C
-        static constexpr auto A0 = portPin(PC, 0);
-        static constexpr auto A1 = portPin(PC, 1);
-        static constexpr auto A2 = portPin(PC, 2);
-        static constexpr auto A3 = portPin(PC, 3);
-        static constexpr auto A4 = portPin(PC, 4);
-        static constexpr auto A5 = portPin(PC, 5);
-
-        // port D
-        static constexpr auto D0 = portPin(PD, 0);
-        static constexpr auto D1 = portPin(PD, 1);
-        static constexpr auto D2 = portPin(PD, 2);
-        static constexpr auto D3 = portPin(PD, 3);
-        static constexpr auto D4 = portPin(PD, 4);
-        static constexpr auto D5 = portPin(PD, 5);
-        static constexpr auto D6 = portPin(PD, 6);
-        static constexpr auto D7 = portPin(PD, 7);
-
-        static constexpr auto BuiltInLed = D13;
+class ArduinoNano
+{
+private:
+    struct GpioSpec {
+        AvrGpioRegs &regs;
+        int          pin;
     };
 
     static constexpr uint16_t usartBase[] = {
         0xC0,
     };
 
-    static auto makeUsart(int num) -> Usart
-    {
-        auto *impl = new Usart::Impl(usartBase[num]);
-        return Usart {impl};
-    }
+public:
+    struct Gpio {
+        static constexpr GpioSpec D8 = {portB, 0};
+        static constexpr GpioSpec D9 = {portB, 1};
+        static constexpr GpioSpec D10 = {portB, 2};
+        static constexpr GpioSpec D11 = {portB, 3};
+        static constexpr GpioSpec D12 = {portB, 4};
+        static constexpr GpioSpec D13 = {portB, 5};
+        // PB6 - XTAL
+        // PB7 - XTAL
+
+        static constexpr GpioSpec A0 = {portC, 0};
+        static constexpr GpioSpec A1 = {portC, 1};
+        static constexpr GpioSpec A2 = {portC, 2};
+        static constexpr GpioSpec A3 = {portC, 3};
+        static constexpr GpioSpec A4 = {portC, 4};
+        static constexpr GpioSpec A5 = {portC, 5};
+
+        static constexpr GpioSpec D0 = {portD, 0};
+        static constexpr GpioSpec D1 = {portD, 1};
+        static constexpr GpioSpec D2 = {portD, 2};
+        static constexpr GpioSpec D3 = {portD, 3};
+        static constexpr GpioSpec D4 = {portD, 4};
+        static constexpr GpioSpec D5 = {portD, 5};
+        static constexpr GpioSpec D6 = {portD, 6};
+        static constexpr GpioSpec D7 = {portD, 7};
+
+        static constexpr auto BuiltInLed = D13;
+    };
+
+    static auto makeGpio(const GpioSpec &spec) { return liquid::Gpio(spec.regs, spec.pin); }
+
+    static auto makeUsart(int num) -> Usart { return Usart {new Usart::Impl(usartBase[num])}; }
+
+    static auto makeAdc() -> Adc { return Adc {new Adc::Impl(0x78)}; }
 };
 
 } // namespace liquid

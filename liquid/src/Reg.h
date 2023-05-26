@@ -22,13 +22,26 @@ constexpr Sfr16 sfr16(uint16_t addr)
     return *reinterpret_cast<volatile uint16_t *>(addr);
 }
 
-template <class T> auto setBit(T &reg, int bit, bool high) -> void
+inline auto writeBit(Sfr8 &reg, int bit, bool high) -> void
 {
     if (high)
         reg |= static_cast<uint8_t>(1 << bit);
     else
         reg &= static_cast<uint8_t>(~(1 << bit));
 }
+
+inline auto writeByMask(Sfr8 &reg, uint8_t mask, bool high) -> void
+{
+    if (high)
+        reg |= mask;
+    else
+        reg &= static_cast<uint8_t>(~mask);
+}
+
+struct SfrBase
+{
+    const uint16_t regAddr;
+};
 
 template <uint8_t lsb, uint8_t width = 1> struct RegBits {
     constexpr explicit RegBits(uint16_t addr_) : addr(addr_) {}
@@ -48,9 +61,9 @@ template <uint8_t lsb, uint8_t width = 1> struct RegBits {
         }
     }
 
-    operator int() const
+    operator volatile int() const
     {
-        auto r = reinterpret_cast<volatile uint8_t *>(addr); // NOLINT
+        auto r = reinterpret_cast<volatile uint8_t *>(addr);
         return *r & mask();
     }
 

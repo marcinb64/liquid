@@ -5,6 +5,7 @@ add_library(
     src/${LIQUID_PLATFORM}/Sys.cpp
     src/${LIQUID_PLATFORM}/UartImpl.cpp
     src/${LIQUID_PLATFORM}/Interrupts.cpp
+    src/${LIQUID_PLATFORM}/AdcImpl.cpp
     src/${LIQUID_PLATFORM}/boards/${LIQUID_BOARD}.cpp)
 
 target_include_directories(${MODULE_ID} PUBLIC 

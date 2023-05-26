@@ -92,9 +92,9 @@ public:
     auto setupUart(long int baud)
     {
         setBaud(baud);
+        UCSZ10() = CharSize::SIZE_8_BIT;
         RXEN() = 1;
         TXEN() = 1;
-        UCSZ10() = CharSize::SIZE_8_BIT;
     }
 
     auto tx(uint8_t data)

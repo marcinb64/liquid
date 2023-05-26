@@ -1,5 +1,5 @@
 #include <BoardSelector.h>
-#include <Gpio.h>
+// #include <Gpio.h>
 #include <Interrupts.h>
 #include <Sys.h>
 #include <Uart.h>
@@ -11,7 +11,9 @@
 using namespace liquid;
 using Board = liquid::ArduinoNano;
 
-static Usart console {Board::makeUsart(0)};
+
+static Usart console = Board::makeUsart(0);
+
 
 class App
 {
@@ -25,19 +27,23 @@ public:
         button.enableInterrupt();
     }
 
-    auto buttonToLed() -> void
-    {
-        int x = button.get();
-        led.set(!x);
-    }
-
     auto start() -> void { liquid::Sys::enableInterrupts(); }
 
-    auto loop() -> void { echo(); }
+    auto loop() -> void
+    {
+        if (trigger) {
+            trigger = 0;
+            printf(".");
+        }
+
+        // echo();
+    }
 
 private:
-    Gpio led {Board::Gpio::BuiltInLed};
-    Gpio button {Board::Gpio::D2};
+    Gpio  led = Board::makeGpio(Board::Gpio::BuiltInLed);
+    Gpio  button = Board::makeGpio(Board::Gpio::D2);
+    
+    volatile int trigger = 0;
 
     void setupSystem()
     {
@@ -47,8 +53,9 @@ private:
 
     void setupPinmux()
     {
-        liquid::Gpio(Board::Gpio::BuiltInLed).asOutput();
-        liquid::Gpio(Board::Gpio::D2).asInput(Gpio::Pullup::PullUp);
+        led.asOutput();
+        led.setLow();
+        button.asInput(Gpio::Pullup::PullUp);
     }
 
     auto echo() -> void
@@ -58,6 +65,14 @@ private:
         int n = console.readLine(rxbuf, sizeof(rxbuf));
         console.tx('_');
         printf("%d: %s\n\r", n, rxbuf);
+    }
+
+    auto buttonToLed() -> void
+    {
+        int x = button.get();
+        led.set(!x);
+
+        trigger = 1;
     }
 };
 
@@ -69,16 +84,8 @@ int main()
     app.start();
     while (true)
         app.loop();
-}
 
-void *operator new[](size_t size)
-{
-    return malloc(size);
-}
-
-void *operator new(size_t size)
-{
-    return malloc(size);
+    return 0;
 }
 
 #include "avr/BoardIsrSelector.cpp"

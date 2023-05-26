@@ -1,17 +1,14 @@
 #include "AdcImpl.h"
+#include "AvrAdc.h"
 
 using namespace liquid;
-using Class = Adc::Impl;
 
-auto Class::readRaw() const -> unsigned int
+auto AdcChannel::getRawRange() const -> unsigned int
 {
-    
+    return 1024;
 }
 
-/* -------------------------------------------------------------------------- */
-
-auto Adc::readRaw() const -> unsigned int
+auto AdcChannel::readRaw() const -> unsigned int
 {
-    return impl->readRaw();
+    return owner->readRaw(channel);
 }
-
