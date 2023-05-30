@@ -10,6 +10,8 @@ namespace liquid
 class Pwm::Impl
 {
 private:
+    using CS = AvrTimer16::ClockSelect;
+
     static constexpr auto maxTimerValue = 1023;
 
     static constexpr auto getPwmFreq(unsigned long ioFreq, unsigned int prescaler, unsigned int top)
@@ -19,25 +21,24 @@ private:
     }
 
     static constexpr unsigned int prescalers[] = {1024, 256, 64, 8, 1};
-    static constexpr unsigned int clockSel[] = {
-        AvrTimer16::ClockSelect::ClkIoDiv1024, AvrTimer16::ClockSelect::ClkIoDiv256,
-        AvrTimer16::ClockSelect::ClkIoDiv64, AvrTimer16::ClockSelect::ClkIoDiv8,
-        AvrTimer16::ClockSelect::ClkIo};
+    static constexpr uint8_t      clockSel[] = {CS::ClkIoDiv1024, CS::ClkIoDiv256, CS::ClkIoDiv64,
+                                                CS::ClkIoDiv8, CS::ClkIo};
 
-    static constexpr auto findPrescaler(unsigned long ioFreq, unsigned long minFreq) -> int
+    static constexpr auto findPrescaler(unsigned long ioFreq, unsigned long minFreq,
+                                        unsigned long maxFreq) -> uint8_t
     {
         for (unsigned int i = 0; i < sizeof(prescalers) / sizeof(*prescalers); ++i) {
-            auto pwmFreq = getPwmFreq(ioFreq, prescalers[i], maxTimerValue);
-            if (pwmFreq > minFreq) return clockSel[i];
+            auto f = getPwmFreq(ioFreq, prescalers[i], maxTimerValue);
+            if (f > minFreq && f < maxFreq) return clockSel[i];
         }
-        return 0;
+        return CS::None;
     }
 
 public:
     Impl(AvrTimer16::Channel channel_) : channel(channel_)
     {
-        constexpr auto clock = findPrescaler(F_CPU, 500);
-        static_assert(clock != AvrTimer16::ClockSelect::None);
+        constexpr auto clock = findPrescaler(F_CPU, 500, F_CPU);
+        static_assert(clock != CS::None);
         timer.setupFastPwm(channel_, clock);
     }
 
@@ -45,6 +46,17 @@ public:
     {
         auto value = static_cast<unsigned int>(dutyCycle * maxTimerValue);
         timer.setPwmDutyCycle(channel, value);
+    }
+
+    auto requestFrequency(unsigned long min, unsigned long max) -> bool
+    {
+        auto clock = findPrescaler(F_CPU, min, max);
+        if (clock != CS::None) {
+            timer.setupFastPwm(channel, clock);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 private:
@@ -55,6 +67,11 @@ private:
 inline auto Pwm::set(float dutyCycle) -> void
 {
     return impl->set(dutyCycle);
+}
+
+inline auto Pwm::requestFrequency(unsigned long min, unsigned long max) -> bool
+{
+    return impl->requestFrequency(min, max);
 }
 
 } // namespace liquid
