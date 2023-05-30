@@ -2,17 +2,17 @@
 #include <Interrupts.h>
 #include <Sys.h>
 #include <Uart.h>
+#include "Pwm.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <util/delay.h>
 
+
 using namespace liquid;
 using Board = liquid::ArduinoNano;
 
-
 static Usart console = Board::makeUsart(0);
-
 
 class App
 {
@@ -26,19 +26,31 @@ public:
         button.enableInterrupt();
     }
 
-    auto start() -> void { liquid::Sys::enableInterrupts(); }
+    auto start() -> void
+    {
+        liquid::Sys::enableInterrupts();
+    }
 
     auto loop() -> void
     {
-        _delay_ms(1000);
-        printf("ADC raw: %d\r\n", adc.readRaw(1));
+        static volatile bool a = false;
+        _delay_ms(500);
+        led.set(a);
+        a = !a;
+
+        unsigned int value = adc.readRaw(1);
+        // printf("ADC raw: %d\r\n", value);
+        
+        pwm.set(value / 1023.0f);
     }
 
 private:
-    Gpio  led = Board::makeGpio(Board::Gpio::BuiltInLed);
-    Gpio  button = Board::makeGpio(Board::Gpio::D2);
-    Adc   adc = Board::makeAdc();
-    
+    Gpio       led = Board::makeGpio(Board::Gpio::BuiltInLed);
+    Gpio       button = Board::makeGpio(Board::Gpio::D2);
+    Adc        adc = Board::makeAdc();
+    Gpio       out = Board::makeGpio(Board::Gpio::D9);
+    Pwm        pwm = Board::makePwmD9();
+
     volatile int trigger = 0;
 
     void setupSystem()
@@ -52,6 +64,7 @@ private:
         led.asOutput();
         led.setLow();
         button.asInput(Gpio::Pullup::PullUp);
+        out.asOutput();
     }
 
     auto echo() -> void
@@ -74,8 +87,23 @@ private:
 
 /* -------------------------------------------------------------------------- */
 
+void crashHandler()
+{
+    Gpio led = Board::makeGpio(Board::Gpio::BuiltInLed);
+    led.asOutput();
+
+    while (1) {
+        led.setHigh();
+        _delay_ms(100);
+        led.setLow();
+        _delay_ms(100);
+    }
+}
+
 int main()
 {
+    atexit(crashHandler);
+
     App app;
     app.start();
     while (true)

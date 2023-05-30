@@ -2,6 +2,7 @@
 #define LIQUID_GENERIC_AVR_H_
 
 #include "../AdcImpl.h"
+#include "../PwmImpl.h"
 #include "../UartImpl.h"
 
 #include "../Gpio.h"
@@ -43,6 +44,10 @@ private:
     struct GpioSpec {
         AvrGpioRegs &regs;
         int          pin;
+
+        constexpr bool operator ==(const GpioSpec &other) const {
+            return (&regs == &other.regs) && (pin == other.pin);
+        }
     };
 
     static constexpr uint16_t usartBase[] = {
@@ -52,8 +57,8 @@ private:
 public:
     struct Gpio {
         static constexpr GpioSpec D8 = {portB, 0};
-        static constexpr GpioSpec D9 = {portB, 1};
-        static constexpr GpioSpec D10 = {portB, 2};
+        static constexpr GpioSpec D9 = {portB, 1};  // OC1A
+        static constexpr GpioSpec D10 = {portB, 2}; // OC1B
         static constexpr GpioSpec D11 = {portB, 3};
         static constexpr GpioSpec D12 = {portB, 4};
         static constexpr GpioSpec D13 = {portB, 5};
@@ -81,9 +86,19 @@ public:
 
     static auto makeGpio(const GpioSpec &spec) { return liquid::Gpio(spec.regs, spec.pin); }
 
-    static auto makeUsart(int num) -> Usart { return Usart {new Usart::Impl(usartBase[num])}; }
+    static auto makePwmD9()
+    {
+        return Pwm {new Pwm::Impl {AvrTimer16::Channel::ChannelA}};
+    }
+
+    static auto makePwmD10()
+    {
+        return Pwm {new Pwm::Impl {AvrTimer16::Channel::ChannelB}};
+    }
 
     static auto makeAdc() -> Adc { return Adc {new Adc::Impl(0x78)}; }
+
+    static auto makeUsart(int num) -> Usart { return Usart {new Usart::Impl(usartBase[num])}; }
 };
 
 } // namespace liquid

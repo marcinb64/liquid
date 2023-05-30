@@ -55,11 +55,7 @@ private:
         static constexpr auto Internal1V1 = 3;
     };
 
-    constexpr auto ADCL_addr() const -> uint16_t { return base; }
-    inline auto ADCL() const { return sfr8(ADCL_addr()); }
-
-    constexpr auto ADCH_addr() const -> uint16_t { return base + 1; }
-    inline auto ADCH() const { return sfr8(ADCH_addr()); }
+    inline auto ADC() const { return sfr16(base); }
 
 public:
     constexpr AvrAdc(uint16_t base_) : base(base_)
@@ -84,9 +80,7 @@ public:
         while (ADCSRA().ADSC == 1)
             ;
 
-        uint8_t lo = ADCL();
-        uint8_t hi = ADCH();
-        return (hi << 8) | lo;
+        return ADC();
     }
 };
 
