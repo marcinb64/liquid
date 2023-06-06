@@ -3,6 +3,7 @@
 #include <Sys.h>
 #include <Uart.h>
 #include "Pwm.h"
+#include "SysTimer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,10 +39,17 @@ public:
         led.set(a);
         a = !a;
 
-        unsigned int value = adc.readRaw(1);
+        // unsigned int value = adc.readRaw(1);
         // printf("ADC raw: %d\r\n", value);
+        // pwm.set(value / 1023.0f);
         
-        pwm.set(value / 1023.0f);
+        while (adc.readRaw(1) < 500);
+
+        printf("Start\r\n");
+        auto t0 = SysTimer::getTime();
+        while (SysTimer::getTime() < (t0 + 10000));
+        printf("Done\r\n");
+        
     }
 
 private:
@@ -57,6 +65,7 @@ private:
     {
         console.setupUart(19200L);
         liquid::installAsStdStreams(console);
+        Board::enableSysTimer();
     }
 
     void setupPinmux()

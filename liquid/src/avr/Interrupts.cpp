@@ -28,4 +28,5 @@ auto callGpioIsr() -> void
     gpioIrqHandler.func(gpioIrqHandler.data);
 }
 
+
 } // namespace liquid

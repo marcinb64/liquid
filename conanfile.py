@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 class HelloConan(ConanFile):
     name = "liquid"
-    version = "0.1"
+    version = "0.2.2"
 
     # Optional metadata
     license = "MIT"
@@ -34,7 +34,7 @@ class HelloConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure(variables={"DAVR_CPU": "atmega168", "F_CPU": "16000000"})
+        cmake.configure(variables={"DAVR_CPU": "atmega168", "F_CPU": "16000000", "LIQUID_PLATFORM": "avr", "LIQUID_BOARD": "ArduinoNano"})
         cmake.build()
 
     def package(self):

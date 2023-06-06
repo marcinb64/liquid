@@ -4,6 +4,7 @@
 #include "../AdcImpl.h"
 #include "../PwmImpl.h"
 #include "../UartImpl.h"
+#include "../AvrTimer8.h"
 
 #include "../Gpio.h"
 
@@ -54,7 +55,10 @@ private:
         0xC0,
     };
 
+
 public:
+    using Timer0 = AvrTimer8<0x44, 0x6e, 0x36>;
+    
     struct Gpio {
         static constexpr GpioSpec D8 = {portB, 0};
         static constexpr GpioSpec D9 = {portB, 1};  // OC1A
@@ -83,6 +87,8 @@ public:
 
         static constexpr auto BuiltInLed = D13;
     };
+
+    static auto enableSysTimer() -> void;
 
     static auto makeGpio(const GpioSpec &spec) { return liquid::Gpio(spec.regs, spec.pin); }
 

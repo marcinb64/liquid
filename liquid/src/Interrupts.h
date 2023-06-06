@@ -10,6 +10,8 @@ struct IrqHandler
 {
     IrqFunc func;
     void *data;
+
+    auto operator()() const -> void { func(data); }
 };
 
 auto addUsartIsr(IrqFunc func, void *data) -> void;

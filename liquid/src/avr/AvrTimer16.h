@@ -78,9 +78,6 @@ public:
     inline auto OCRA() const -> Sfr16 & { return sfr16(base + 0x08); }
     inline auto OCRB() const -> Sfr16 & { return sfr16(base + 0x0a); }
 
-    inline auto OCRAL() const -> Sfr8 & { return sfr8(base + 0x08); }
-    inline auto OCRAH() const -> Sfr8 & { return sfr8(base + 0x09); }
-
     constexpr auto TIMSK() const
     {
         struct Bits : SfrBase {
@@ -133,9 +130,9 @@ public:
         writeWgm(WaveformGenerationMode::FastPwm10Bit);
 
         if (channel == Channel::ChannelA)
-            TCCR1A().COM1A = CompareOuputMode::Set;
+            TCCR1A().COM1A = CompareOuputMode::Clear;
         else if (channel == Channel::ChannelB)
-            TCCR1A().COM1B = CompareOuputMode::Set;
+            TCCR1A().COM1B = CompareOuputMode::Clear;
         else
             assert(false);
 

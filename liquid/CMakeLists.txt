@@ -6,6 +6,7 @@ add_library(
     src/${LIQUID_PLATFORM}/UartImpl.cpp
     src/${LIQUID_PLATFORM}/Interrupts.cpp
     src/${LIQUID_PLATFORM}/AdcImpl.cpp
+    src/${LIQUID_PLATFORM}/SysTimer.cpp
     src/${LIQUID_PLATFORM}/boards/${LIQUID_BOARD}.cpp)
 
 target_include_directories(${MODULE_ID} PUBLIC 
@@ -21,26 +22,33 @@ target_compile_definitions(${MODULE_ID} PUBLIC LIQUID_BOARD_${LIQUID_BOARD})
 install(TARGETS ${MODULE_ID})
 
 install(FILES
-    src/Uart.h
-    src/reg.h
+    src/Adc.h
+    src/Interrupts.h
+    src/Pwm.h
+    src/Reg.h
     src/Sys.h
-    src/avr/Interrupts.h
+    src/SysTimer.h
+    src/Uart.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid
     )
 
 install(FILES
+    src/avr/AdcImpl.h
+    src/avr/AvrAdc.h
+    src/avr/AvrTimer8.h
+    src/avr/AvrTimer16.h
     src/avr/BoardSelector.h
     src/avr/BoardIsrSelector.cpp
     src/avr/Gpio.h
+    src/avr/PwmImpl.h
     src/avr/UartImpl.h
-    src/avr/AdcImpl.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/avr
     )
 
 install(FILES
     src/avr/boards/ArduinoNano.h
     src/avr/boards/ArduinoNanoIsr.cpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/boards
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/avr/boards
     )
 
     

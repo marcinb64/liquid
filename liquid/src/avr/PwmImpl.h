@@ -37,9 +37,7 @@ private:
 public:
     Impl(AvrTimer16::Channel channel_) : channel(channel_)
     {
-        constexpr auto clock = findPrescaler(F_CPU, 500, F_CPU);
-        static_assert(clock != CS::None);
-        timer.setupFastPwm(channel_, clock);
+        timer.setupFastPwm(channel_, CS::ClkIoDiv1024);
     }
 
     auto set(float dutyCycle) -> void

@@ -1,14 +1,9 @@
 #include "../../Interrupts.h"
+#include "../../SysTimer.h"
 #include <avr/interrupt.h>
 
 using namespace liquid;
 
-#if 0
-ISR(USART_UDRE_vect)
-{
-    callUsartIsr();
-}
-#endif
 
 ISR(PCINT0_vect)
 {
@@ -23,4 +18,9 @@ ISR(PCINT1_vect)
 ISR(PCINT2_vect)
 {
     callGpioIsr();
+}
+
+ISR(TIMER0_COMPA_vect)
+{
+    SysTimer::isr();
 }
