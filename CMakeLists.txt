@@ -40,4 +40,6 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/conan)
 # Project structure
 #
 add_subdirectory(liquid)
-add_subdirectory(app)
+if (NOT LIB_ONLY)
+    add_subdirectory(app)
+endif ()

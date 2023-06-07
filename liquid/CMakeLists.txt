@@ -7,7 +7,7 @@ add_library(
     src/${LIQUID_PLATFORM}/Interrupts.cpp
     src/${LIQUID_PLATFORM}/AdcImpl.cpp
     src/${LIQUID_PLATFORM}/SysTimer.cpp
-    src/${LIQUID_PLATFORM}/boards/${LIQUID_BOARD}.cpp)
+    src/${LIQUID_PLATFORM}/boards/ArduinoNano.cpp)
 
 target_include_directories(${MODULE_ID} PUBLIC 
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/src"
@@ -17,7 +17,7 @@ target_include_directories(${MODULE_ID} PUBLIC
 target_link_libraries(${MODULE_ID} PRIVATE project_warnings project_options)
 
 
-target_compile_definitions(${MODULE_ID} PUBLIC LIQUID_BOARD_${LIQUID_BOARD})
+#target_compile_definitions(${MODULE_ID} PUBLIC LIQUID_BOARD_${LIQUID_BOARD})
 
 install(TARGETS ${MODULE_ID})
 
