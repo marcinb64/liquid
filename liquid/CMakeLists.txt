@@ -17,7 +17,7 @@ target_include_directories(${MODULE_ID} PUBLIC
 target_link_libraries(${MODULE_ID} PRIVATE project_warnings project_options)
 
 
-#target_compile_definitions(${MODULE_ID} PUBLIC LIQUID_BOARD_${LIQUID_BOARD})
+target_compile_definitions(${MODULE_ID} PUBLIC LIQUID_BOARD_${LIQUID_BOARD})
 
 install(TARGETS ${MODULE_ID})
 
