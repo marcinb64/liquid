@@ -63,9 +63,9 @@ private:
 
     void setupSystem()
     {
-        console.setupUart(19200L);
+        console.setupUart(F_CPU, 19200L);
         liquid::installAsStdStreams(console);
-        Board::enableSysTimer();
+        Board::enableSysTimer(F_CPU);
     }
 
     void setupPinmux()

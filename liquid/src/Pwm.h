@@ -14,7 +14,7 @@ public:
     Pwm &operator=(Pwm &&other) = default;
 
     auto set(float dutyCycle) -> void;
-    auto requestFrequency(unsigned long min, unsigned long max) -> bool;
+    auto requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool;
 
 private:
     Impl *impl;

@@ -30,8 +30,8 @@ public:
         static constexpr auto SIZE_9_BIT = 7;
     };
 
-    auto setBaud(long int baud) -> void;
-    auto setupUart(long int baud) -> void;
+    auto setBaud(unsigned long fCpu, unsigned long baud) -> void;
+    auto setupUart(unsigned long fCpu, unsigned long baud) -> void;
     auto tx(uint8_t data) -> void;
     auto tx(const uint8_t *data, int length) -> void;
     auto rx() -> uint8_t;

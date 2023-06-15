@@ -2,9 +2,9 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 
-class HelloConan(ConanFile):
+class LiquidRecipe(ConanFile):
     name = "liquid"
-    version = "0.2.4"
+    version = "0.2.5"
 
     # Optional metadata
     license = "MIT"
@@ -14,16 +14,12 @@ class HelloConan(ConanFile):
     topics = ("foundations", "utility", "arduino", "microcontroller", "embedded", "avr")
 
     # Binary configuration
-    settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [False], "fPIC": [False]}
-    default_options = {"shared": False, "fPIC": False}
+    settings = "compiler", "build_type", "arch"
+    options = {"shared": [True, False], "fPIC": [True, False], "platform": ["avr"]}
+    default_options = {"shared": False, "fPIC": False, "platform": "avr"}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "CompilerWarnings.cmake", "StaticAnalysis.cmake", "liquid/*", "liquid/src/*", "liquid/src/avr/*", "liquid/src/avr/boards/*"
-
-    def config_options(self):
-        if self.settings.os == "Windows":
-            del self.options.fPIC
 
     def layout(self):
         cmake_layout(self)
@@ -34,7 +30,7 @@ class HelloConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure(variables={"LIB_ONLY": "True", "LIQUID_PLATFORM": "avr"})
+        cmake.configure(variables={"LIB_ONLY": "True", "LIQUID_PLATFORM": self.options.platform})
         cmake.build()
 
     def package(self):

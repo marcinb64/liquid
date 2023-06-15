@@ -7,9 +7,9 @@ namespace liquid
 
 static ArduinoNano::Timer0 timer0;
 
-auto ArduinoNano::enableSysTimer() -> void
+auto ArduinoNano::enableSysTimer(unsigned long fCpu) -> void
 {
-    timer0.setupAsSysTimer(1000 /* Hz */);
+    timer0.setupAsSysTimer(fCpu, 1000 /* Hz */);
 }
 
 auto enableGpioInterrupts() -> void

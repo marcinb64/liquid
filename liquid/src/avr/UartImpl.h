@@ -9,7 +9,7 @@
 namespace liquid
 {
 
-static constexpr auto calcNormalModeUbrr(long int fOsc, long int baud) -> uint16_t
+static constexpr auto calcNormalModeUbrr(unsigned long fOsc, unsigned long baud) -> uint16_t
 {
     return static_cast<uint16_t>((fOsc + 8 * baud) / (16 * baud) - 1);
 }
@@ -87,11 +87,11 @@ public:
         static constexpr auto SIZE_9_BIT = 7;
     };
 
-    auto setBaud(long int baud) { sfr16(ubrr()) = calcNormalModeUbrr(F_CPU, baud); }
+    auto setBaud(unsigned long fCpu, unsigned long baud) { sfr16(ubrr()) = calcNormalModeUbrr(fCpu, baud); }
 
-    auto setupUart(long int baud)
+    auto setupUart(unsigned long fCpu, unsigned long baud)
     {
-        setBaud(baud);
+        setBaud(fCpu, baud);
         UCSZ10() = CharSize::SIZE_8_BIT;
         RXEN() = 1;
         TXEN() = 1;

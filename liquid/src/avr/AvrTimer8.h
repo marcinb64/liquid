@@ -107,9 +107,9 @@ public:
         return static_cast<uint8_t>(ioFreq / 2 / prescaler / freq - 1);
     }
 
-    auto setupAsSysTimer(unsigned long freq)
+    auto setupAsSysTimer(unsigned long cpuFreq, unsigned long freq)
     {
-        auto ocr = getCtcOcr(F_CPU, 64, freq / 2);
+        auto ocr = getCtcOcr(cpuFreq, 64, freq / 2);
         writeWgm(WaveformGenerationMode::Ctc);
         OCRA() = ocr;
         TCCRB().CS = ClockSelect::ClkIoDiv64;

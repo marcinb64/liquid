@@ -46,9 +46,9 @@ public:
         timer.setPwmDutyCycle(channel, value);
     }
 
-    auto requestFrequency(unsigned long min, unsigned long max) -> bool
+    auto requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool
     {
-        auto clock = findPrescaler(F_CPU, min, max);
+        auto clock = findPrescaler(fCpu, min, max);
         if (clock != CS::None) {
             timer.setupFastPwm(channel, clock);
             return true;
@@ -67,9 +67,9 @@ inline auto Pwm::set(float dutyCycle) -> void
     return impl->set(dutyCycle);
 }
 
-inline auto Pwm::requestFrequency(unsigned long min, unsigned long max) -> bool
+inline auto Pwm::requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool
 {
-    return impl->requestFrequency(min, max);
+    return impl->requestFrequency(fCpu, min, max);
 }
 
 } // namespace liquid

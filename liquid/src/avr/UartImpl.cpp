@@ -24,14 +24,14 @@ void installAsStdStreams(Usart &uart)
     stdout = &_stdout;
 }
 
-auto Usart::setBaud(long int baud) -> void
+auto Usart::setBaud(unsigned long fCpu, unsigned long baud) -> void
 {
-    impl->setBaud(baud);
+    impl->setBaud(fCpu, baud);
 }
 
-auto Usart::setupUart(long int baud) -> void
+auto Usart::setupUart(unsigned long fCpu, unsigned long baud) -> void
 {
-    impl->setupUart(baud);
+    impl->setupUart(fCpu, baud);
 }
 
 auto Usart::tx(uint8_t data) -> void

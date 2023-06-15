@@ -88,7 +88,7 @@ public:
         static constexpr auto BuiltInLed = D13;
     };
 
-    static auto enableSysTimer() -> void;
+    static auto enableSysTimer(unsigned long fCpu) -> void;
 
     static auto makeGpio(const GpioSpec &spec) { return liquid::Gpio(spec.regs, spec.pin); }
 
