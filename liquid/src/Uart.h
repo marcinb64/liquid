@@ -34,6 +34,7 @@ public:
     auto setupUart(unsigned long fCpu, unsigned long baud) -> void;
     auto tx(uint8_t data) -> void;
     auto tx(const void *data, int length) -> void;
+    auto isRxReady() const -> bool;
     auto rx() -> uint8_t;
     auto readLine(uint8_t *rxbuf, int size) -> int;
 

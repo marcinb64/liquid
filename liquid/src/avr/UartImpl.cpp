@@ -49,6 +49,11 @@ auto Usart::rx() -> uint8_t
     return impl->rx();
 }
 
+auto Usart::isRxReady() const -> bool
+{
+    return impl->isRxReady();
+}
+
 auto Usart::readLine(uint8_t *rxbuf, int size) -> int
 {
     return impl->readLine(rxbuf, size);

@@ -36,31 +36,31 @@ public:
         }, this);
     }
 
-    auto RXC() { return RegBits<7>(ucsrA()); }
-    auto TXC() { return RegBits<6>(ucsrA()); }
-    auto UDRE() { return RegBits<5>(ucsrA()); }
-    auto FE() { return RegBits<4>(ucsrA()); }
-    auto DOR() { return RegBits<3>(ucsrA()); }
-    auto UPE() { return RegBits<2>(ucsrA()); }
-    auto U2X() { return RegBits<1>(ucsrA()); }
-    auto MPCM() { return RegBits<0>(ucsrA()); }
+    auto RXC() const { return RegBits<7>(ucsrA()); }
+    auto TXC() const { return RegBits<6>(ucsrA()); }
+    auto UDRE() const { return RegBits<5>(ucsrA()); }
+    auto FE() const { return RegBits<4>(ucsrA()); }
+    auto DOR() const { return RegBits<3>(ucsrA()); }
+    auto UPE() const { return RegBits<2>(ucsrA()); }
+    auto U2X() const { return RegBits<1>(ucsrA()); }
+    auto MPCM() const { return RegBits<0>(ucsrA()); }
 
-    auto RXCIE() { return RegBits<7>(ucsrB()); }
-    auto TXCIE() { return RegBits<6>(ucsrB()); }
-    auto UDRIE() { return RegBits<5>(ucsrB()); }
-    auto RXEN() { return RegBits<4>(ucsrB()); }
-    auto TXEN() { return RegBits<3>(ucsrB()); }
-    auto UCSZ2() { return RegBits<2>(ucsrB()); }
-    auto RXB8() { return RegBits<1>(ucsrB()); }
-    auto TXB8() { return RegBits<0>(ucsrB()); }
+    auto RXCIE() const { return RegBits<7>(ucsrB()); }
+    auto TXCIE() const { return RegBits<6>(ucsrB()); }
+    auto UDRIE() const { return RegBits<5>(ucsrB()); }
+    auto RXEN() const { return RegBits<4>(ucsrB()); }
+    auto TXEN() const { return RegBits<3>(ucsrB()); }
+    auto UCSZ2() const { return RegBits<2>(ucsrB()); }
+    auto RXB8() const { return RegBits<1>(ucsrB()); }
+    auto TXB8() const { return RegBits<0>(ucsrB()); }
 
-    auto UMSEL() { return RegBits<6, 2>(ucsrC()); }
-    auto UPM() { return RegBits<4, 2>(ucsrC()); }
-    auto USBS() { return RegBits<3>(ucsrC()); }
-    auto UCSZ10() { return RegBits<1, 2>(ucsrC()); }
-    auto UDORD() { return RegBits<2>(ucsrC()); }
-    auto UCPHA() { return RegBits<1>(ucsrC()); }
-    auto UCPOL() { return RegBits<0>(ucsrC()); }
+    auto UMSEL() const { return RegBits<6, 2>(ucsrC()); }
+    auto UPM() const { return RegBits<4, 2>(ucsrC()); }
+    auto USBS() const { return RegBits<3>(ucsrC()); }
+    auto UCSZ10() const { return RegBits<1, 2>(ucsrC()); }
+    auto UDORD() const { return RegBits<2>(ucsrC()); }
+    auto UCPHA() const { return RegBits<1>(ucsrC()); }
+    auto UCPOL() const { return RegBits<0>(ucsrC()); }
 
     struct UsartMode {
         static constexpr auto ASYNC_USART = 0;
@@ -124,6 +124,11 @@ public:
         while (!RXC())
             ;
         return sfr8(udr());
+    }
+
+    auto isRxReady() const -> bool
+    {
+        return RXC();
     }
 
     auto readLine(uint8_t *rxbuf, int size) -> int
