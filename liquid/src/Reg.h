@@ -61,7 +61,7 @@ template <uint8_t lsb, uint8_t width = 1> struct RegBits {
         }
     }
 
-    operator volatile int() const
+    operator int() const
     {
         auto r = reinterpret_cast<volatile uint8_t *>(addr);
         return *r & mask();

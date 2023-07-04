@@ -33,7 +33,7 @@ public:
     auto setBaud(unsigned long fCpu, unsigned long baud) -> void;
     auto setupUart(unsigned long fCpu, unsigned long baud) -> void;
     auto tx(uint8_t data) -> void;
-    auto tx(const uint8_t *data, int length) -> void;
+    auto tx(const void *data, int length) -> void;
     auto rx() -> uint8_t;
     auto readLine(uint8_t *rxbuf, int size) -> int;
 

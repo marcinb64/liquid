@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 # Project definition
 project(
     liquid
-    VERSION 0.2.5
+    VERSION 0.3.1
     LANGUAGES CXX)
 
 # Build customization
@@ -26,7 +26,7 @@ set_project_warnings(project_warnings)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if (NOT AVR)
+if (NOT "${LIQUID_PLATFORM}" STREQUAL "avr")
     include(CTest)
 endif ()
 

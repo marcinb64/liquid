@@ -4,7 +4,6 @@
 
 using namespace liquid;
 
-
 ISR(PCINT0_vect)
 {
     callGpioIsr();
@@ -23,4 +22,9 @@ ISR(PCINT2_vect)
 ISR(TIMER0_COMPA_vect)
 {
     SysTimer::isr();
+}
+
+ISR(USART_UDRE_vect)
+{
+    callUsartIsr();
 }

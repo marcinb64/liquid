@@ -39,9 +39,9 @@ auto Usart::tx(uint8_t data) -> void
     impl->tx(data);
 }
 
-auto Usart::tx(const uint8_t *data, int length) -> void
+auto Usart::tx(const void *data, int length) -> void
 {
-    impl->tx(data, length);
+    impl->tx(reinterpret_cast<const uint8_t*>(data), length);
 }
 
 auto Usart::rx() -> uint8_t

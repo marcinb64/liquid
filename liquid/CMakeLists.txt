@@ -16,6 +16,8 @@ target_include_directories(${MODULE_ID} PUBLIC
 
 target_link_libraries(${MODULE_ID} PRIVATE project_warnings project_options)
 
+target_compile_definitions(${MODULE_ID} PUBLIC LIQUID_BOARD_${LIQUID_BOARD})
+
 install(TARGETS ${MODULE_ID})
 
 install(FILES
@@ -49,7 +51,7 @@ install(FILES
     )
 
     
-if (ENABLE_UTEST_NEVER)
+if (BUILD_TESTING)
     find_package(Catch2 REQUIRED)
 
     add_executable(utest_${MODULE_ID} test/utest_core.cpp)

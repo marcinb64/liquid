@@ -8,22 +8,15 @@
   - [X] Build instructions
   
 * Notes
-** Configure and build unit tests
-   mkdir -p build.linux/conan
-   cd build.linux/conan
-   conan install ../../conanfile-linux.txt --build=missing
-   cd ..
-   cmake ..
-   cmake --build . --target utest_core
 ** Configure and build target
-   mkdir -p build.avr/conan
-   cd build.avr/conan
-   conan install ../../conanfile-avr.txt --build=missing --profile=avr
+   mkdir -p build.avr
+   conan install --profile=avr --build=missing --output-folder=build.avr conanfile-avr.txt -s build_type=Debug -s arch=avr -o platform=avr
 
-   cmake --toolchain ~/projects/_staging/avr-toolchain.cmake \
-     -DAVR_CPU=atmega328 -DF_CPU=16000000 \
-     -DLIQUID_PLATFORM=avr -DLIQUID_BOARD=ArduinoNano ..
-   cmake --build .
+   cmake -B build.avr --toolchain build.avr/conan_toolchain.cmake -DLIQUID_PLATFORM=avr -DLIQUID_BOARD=ArduinoNano -DF_CPU=16000000 -DENABLE_SANITIZERS=Off
+   cmake --build build.avr
+
+** Create package
+   conan create . --profile=avr -s build_type=Debug
    
 ** Flashing
-   avrdude -c arduino -p m328p -P /dev/ttyUSB0 -F -U flash:w:demo.hex
+   avrdude -c arduino -p m328p -P /dev/ttyUSB0 -F -U flash:w:build.avr/app/sandbox.hex

@@ -108,6 +108,8 @@ public:
 
     auto tx(const uint8_t *data, int length)
     {
+        while (txLength > 0)
+            ;
         while (UDRE() == 0)
             ;
 
@@ -148,8 +150,8 @@ public:
     }
 
 private:
-    const uint8_t *txBuffer;
-    int            txLength;
+    const uint8_t *txBuffer = nullptr;
+    int            txLength = 0;
 };
 
 

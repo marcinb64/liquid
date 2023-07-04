@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 class LiquidRecipe(ConanFile):
     name = "liquid"
-    version = "0.2.5"
+    version = "0.3.1"
 
     # Optional metadata
     license = "MIT"
@@ -30,7 +30,7 @@ class LiquidRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure(variables={"LIB_ONLY": "True", "LIQUID_PLATFORM": self.options.platform})
+        cmake.configure(variables={"LIB_ONLY": "True", "LIQUID_PLATFORM": self.options.platform, "ENABLE_SANITIZERS": "Off"})
         cmake.build()
 
     def package(self):
