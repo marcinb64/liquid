@@ -1,11 +1,20 @@
 #include "../../Interrupts.h"
 #include "../../SysTimer.h"
+#include "../AvrInterrupts.h"
+
 #include <avr/interrupt.h>
 
 using namespace liquid;
 
 namespace liquid
 {
+
+IrqHandler irqHandlers[5] = {};
+
+auto installIrqHandler(int irq, const IrqHandler &handler) -> void
+{
+    irqHandlers[irq] = handler;
+}
 
 auto enableGpioInterrupts() -> void
 {
@@ -35,7 +44,27 @@ ISR(PCINT2_vect)
     callGpioIsr();
 }
 
-ISR(USART_UDRE_vect)
+ISR(TIMER1_COMPA_vect)
+{
+    irqHandlers[Irq::Timer1CompA]();
+}
+
+ISR(TIMER3_COMPA_vect)
+{
+    irqHandlers[Irq::Timer3CompA]();
+}
+
+ISR(TIMER4_COMPA_vect)
+{
+    irqHandlers[Irq::Timer4CompA]();
+}
+
+ISR(TIMER5_COMPA_vect)
+{
+    irqHandlers[Irq::Timer5CompA]();
+}
+
+ISR(USART1_UDRE_vect)
 {
     callUsartIsr();
 }

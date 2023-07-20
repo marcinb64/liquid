@@ -7,20 +7,10 @@ namespace liquid
 class Pwm
 {
 public:
-    class Impl;
-
-    Pwm(Impl *impl_) : impl(impl_) {}
-    Pwm(Pwm &&other) = default;
-    Pwm &operator=(Pwm &&other) = default;
-
-    auto set(float dutyCycle) -> void;
-    auto requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool;
-
-private:
-    Impl *impl;
+    virtual ~Pwm() = default;
     
-    Pwm(const Pwm &other) = delete;
-    Pwm &operator=(const Pwm &other) = delete;
+    virtual auto set(float dutyCycle) -> void;
+    virtual auto requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool;
 };
 
 }

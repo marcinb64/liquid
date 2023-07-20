@@ -1,4 +1,4 @@
-#include "ArduinoNano.h"
+#include "ArduinoMega.h"
 
 #include "../../Reg.h"
 

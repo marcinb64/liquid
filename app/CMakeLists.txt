@@ -1,6 +1,9 @@
 set(MODULE_ID sandbox)
 
-add_executable(${MODULE_ID} sandbox.cpp mem.cpp)
+add_executable(${MODULE_ID} 
+    src/main.cpp
+    src/mem.cpp
+    src/app.cpp)
 
 target_compile_definitions(${MODULE_ID} PUBLIC F_CPU=${F_CPU})
 

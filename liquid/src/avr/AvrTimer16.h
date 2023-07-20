@@ -1,7 +1,11 @@
 #ifndef AVRTIMER16_H_
 #define AVRTIMER16_H_
 
+#include "../Pwm.h"
 #include "../Reg.h"
+#include "../SquareWave.h"
+#include "../Timer.h"
+#include "TimerModes.h"
 
 #include <assert.h>
 #include <math.h>
@@ -9,30 +13,37 @@
 namespace liquid
 {
 
+template <class T> struct ComponentConfig {
+    bool isValid;
+    T    configFunc;
+
+    operator bool() const { return isValid; }
+};
+
 class AvrTimer16
 {
 public:
-    static constexpr uint16_t base = 0x80;
+    struct Config {
+        uint16_t base;
+        uint16_t timskAddr;
+        uint16_t tifrAddr;
+        int      irqCompA;
+    };
 
-    constexpr auto TCCR1A() const
+private:
+    const Config &config;
+
+public:
+    constexpr auto TCCRA() const
     {
         struct Bits : SfrBase {
-            RegBits<6, 2> COM1A {regAddr};
-            RegBits<4, 2> COM1B {regAddr};
+            RegBits<6, 2> COMA {regAddr};
+            RegBits<4, 2> COMB {regAddr};
             RegBits<0, 2> WGM10 {regAddr};
         };
 
-        return Bits {base};
+        return Bits {config.base};
     }
-
-    enum class Channel { ChannelA, ChannelB };
-
-    struct CompareOuputMode {
-        static constexpr auto None = 0;
-        static constexpr auto Toggle = 1;
-        static constexpr auto Clear = 2;
-        static constexpr auto Set = 3;
-    };
 
     struct WaveformGenerationMode {
         static constexpr auto Normal = 0;
@@ -53,53 +64,64 @@ public:
         static constexpr auto FastPwmToOcr = 15;
     };
 
-    constexpr auto TCCR1B() const
+    constexpr auto TCCRB() const
     {
         struct Bits : SfrBase {
             RegBits<3, 2> WGM32 {regAddr};
             RegBits<0, 3> CS {regAddr};
         };
 
-        return Bits {base + 0x01};
+        return Bits {config.base + 0x01};
     }
 
-    constexpr auto TCCR1C() const
+    constexpr auto TCCRC() const
     {
         struct Bits : SfrBase {
-            RegBits<7> FOC1A {regAddr};
-            RegBits<6> FOC1B {regAddr};
+            RegBits<7> FOCA {regAddr};
+            RegBits<6> FOCB {regAddr};
         };
 
-        return Bits {base + 0x02};
+        return Bits {config.base + 0x02};
     }
 
-    inline auto TCNT1() const -> Sfr16 & { return sfr16(base + 0x04); }
-    inline auto ICR() const -> Sfr16 & { return sfr16(base + 0x06); }
-    inline auto OCRA() const -> Sfr16 & { return sfr16(base + 0x08); }
-    inline auto OCRB() const -> Sfr16 & { return sfr16(base + 0x0a); }
+    inline auto TCNT() const -> Sfr16 & { return sfr16(config.base + 0x04); }
+    inline auto ICR() const -> Sfr16 & { return sfr16(config.base + 0x06); }
+    inline auto OCRA() const -> Sfr16 & { return sfr16(config.base + 0x08); }
+    inline auto OCRB() const -> Sfr16 & { return sfr16(config.base + 0x0a); }
 
     constexpr auto TIMSK() const
     {
         struct Bits : SfrBase {
             RegBits<5> ICIE {regAddr};
-            RegBits<2> OCIE1B {regAddr};
-            RegBits<1> OCIE1A {regAddr};
+            RegBits<2> OCIEB {regAddr};
+            RegBits<1> OCIEA {regAddr};
             RegBits<0> TOIE {regAddr};
         };
 
-        return Bits {0x6f};
+        return Bits {config.timskAddr};
     }
 
     constexpr auto TIFR() const
     {
         struct Bits : SfrBase {
             RegBits<5> ICF {regAddr};
-            RegBits<2> OCF1B {regAddr};
-            RegBits<1> OCF1A {regAddr};
+            RegBits<2> OCFB {regAddr};
+            RegBits<1> OCFA {regAddr};
             RegBits<0> TOV {regAddr};
         };
 
-        return Bits {0x36};
+        return Bits {config.tifrAddr};
+    }
+
+    constexpr static auto calcTop(long cpuFreq, int prescaler, long freq) -> uint16_t
+    {
+        return static_cast<uint16_t>(cpuFreq / (prescaler * freq) - 1);
+    }
+
+    auto writeWgm(int mode)
+    {
+        TCCRB().WGM32 = (mode >> 2) & 0x3;
+        TCCRA().WGM10 = mode & 0x3;
     }
 
     struct ClockSelect {
@@ -113,41 +135,256 @@ public:
         static constexpr auto ExtRising = 7;
     };
 
-    constexpr static auto calcTop(long cpuFreq, int prescaler, long freq) -> uint16_t
+    struct ClockSel {
+        uint8_t      value;
+        unsigned int prescaler;
+    };
+
+    static constexpr ClockSel clockNone = {0, 0};
+    static constexpr ClockSel clocksArray[] = {{5, 1024}, {4, 256}, {3, 64}, {2, 8}, {1, 1}};
+
+    struct CTCMode {
+        static constexpr auto maxTimerValue = 0xffff;
+
+        static constexpr auto getFreq(unsigned long ioFreq, int prescaler, unsigned long ocr)
+            -> float
+        {
+            return static_cast<float>(ioFreq) /
+                   (2.0f * static_cast<float>(prescaler) * (1.0f + static_cast<float>(ocr)));
+        }
+
+        static constexpr auto getOcr(unsigned long ioFreq, int prescaler, float freq) -> uint16_t
+        {
+            return static_cast<uint16_t>(
+                static_cast<float>(ioFreq) / 2.0f / static_cast<float>(prescaler) / freq - 1.0f);
+        }
+
+        static constexpr auto findClock(unsigned long ioFreq, float freq) -> const ClockSel &
+        {
+            constexpr int N = sizeof(clocksArray) / sizeof(*clocksArray);
+            for (int i = N - 1; i >= 0; --i) {
+                auto minFreq = getFreq(ioFreq, clocksArray[i].prescaler, maxTimerValue);
+                auto maxFreq = getFreq(ioFreq, clocksArray[i].prescaler, 0);
+                if (freq > minFreq && freq < maxFreq) return clocksArray[i];
+            }
+            return clockNone;
+        }
+
+        static constexpr auto tryConfigureFrequency(unsigned long ioFreq, float freq)
+        {
+            const auto clock = findClock(ioFreq, freq);
+            const auto valid = clock.prescaler != 0;
+            const auto ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
+
+            auto c = [=](AvrTimer16 &obj) {
+                obj.writeWgm(AvrTimer16::WaveformGenerationMode::CtcToOcr);
+                obj.TCCRB().CS = clock.value;
+                obj.OCRA() = ocrValue;
+
+                return true;
+            };
+
+            return ComponentConfig<decltype(c)> {valid, c};
+        }
+    };
+
+    struct FastPwmMode {
+        using Channel = CompareOutputChannel;
+
+        // Fast PWM 10 bit mode Timer TOP value
+        static constexpr auto maxTimerValue = 1023;
+
+        static constexpr auto setDutyCycle(float dutyCycle, Channel channel)
+        {
+            const auto value = static_cast<unsigned int>(dutyCycle * maxTimerValue);
+
+            auto cfg = [=](AvrTimer16 &obj) {
+                if (channel == Channel::ChannelA)
+                    obj.OCRA() = value;
+                else if (channel == Channel::ChannelB)
+                    obj.OCRB() = value;
+                else
+                    assert(false);
+            };
+
+            return ComponentConfig<decltype(cfg)> {true, cfg};
+        }
+
+        static constexpr auto findFrequency(unsigned long fCpu, unsigned long min,
+                                            unsigned long max) -> unsigned long
+        {
+            const auto clock = findPrescaler(fCpu, min, max);
+            if (clock.prescaler == 0)
+                return 0;
+            else
+                return getPwmFreq(fCpu, clock.prescaler, maxTimerValue);
+        }
+
+        static constexpr auto tryConfigureFrequency(Channel channel, unsigned long fCpu,
+                                                    unsigned long min, unsigned long max)
+        {
+            const auto clock = findPrescaler(fCpu, min, max);
+            const auto valid = clock.prescaler == 0;
+
+            auto cfg = [=](AvrTimer16 &obj) {
+                if (channel == Channel::ChannelA)
+                    obj.TCCRA().COMA = CompareOuputMode::Clear;
+                else if (channel == Channel::ChannelB)
+                    obj.TCCRA().COMB = CompareOuputMode::Clear;
+                // else if (channel == Channel::ChannelC)
+                // obj.TCCRA().COMC = CompareOuputMode::Clear; // TODO
+                else
+                    assert(false);
+
+                obj.writeWgm(AvrTimer16::WaveformGenerationMode::FastPwm10Bit);
+                obj.TCCRB().CS = clock.value;
+
+                return true;
+            };
+
+            return ComponentConfig<decltype(cfg)> {valid, cfg};
+        }
+
+        static constexpr auto getPwmFreq(unsigned long ioFreq, unsigned int prescaler,
+                                         unsigned int top) -> unsigned long
+        {
+            return ioFreq / (prescaler * (1L + top));
+        }
+
+        static constexpr auto findPrescaler(unsigned long ioFreq, unsigned long minFreq,
+                                            unsigned long maxFreq) -> const ClockSel &
+        {
+            for (unsigned int i = 0; sizeof(clocksArray) / sizeof(*clocksArray); ++i) {
+                auto f = getPwmFreq(ioFreq, clocksArray[i].prescaler, maxTimerValue);
+                if (f > minFreq && f < maxFreq) return clocksArray[i];
+            }
+            return clockNone;
+        }
+    };
+
+    constexpr AvrTimer16(const Config &config_) : config(config_) {}
+
+    template <class T> auto apply(const ComponentConfig<T> &componentConfig)
     {
-        return static_cast<uint16_t>(cpuFreq / (prescaler * freq) - 1);
+        componentConfig.configFunc(*this);
     }
 
-    auto writeWgm(int mode)
-    {
-        TCCR1B().WGM32 = (mode >> 2) & 0x3;
-        TCCR1A().WGM10 = mode & 0x3;
-    }
+    friend class PwmImpl;
+    friend class TimerImpl16;
+    friend class SquareWaveImpl16;
+};
 
+/* -------------------------------------------------------------------------- */
+
+class PwmImpl : public Pwm
+{
 public:
-    auto setupFastPwm(Channel channel, uint8_t clockSelect)
+    PwmImpl(AvrTimer16 timer_, CompareOutputChannel channel_) : timer(timer_), channel(channel_) {}
+
+    virtual ~PwmImpl() = default;
+
+    auto set(float dutyCycle) -> void override
     {
-        writeWgm(WaveformGenerationMode::FastPwm10Bit);
-
-        if (channel == Channel::ChannelA)
-            TCCR1A().COM1A = CompareOuputMode::Clear;
-        else if (channel == Channel::ChannelB)
-            TCCR1A().COM1B = CompareOuputMode::Clear;
-        else
-            assert(false);
-
-        TCCR1B().CS = clockSelect;
+        auto config = AvrTimer16::FastPwmMode::setDutyCycle(dutyCycle, channel);
+        timer.apply(config);
     }
 
-    auto setPwmDutyCycle(Channel ch, unsigned int value)
+    constexpr auto findFrequency(unsigned long fCpu, unsigned long min, unsigned long max)
+        -> unsigned long
     {
-        if (ch == Channel::ChannelA)
-            OCRA() = value;
-        else if (ch == Channel::ChannelB)
-            OCRB() = value;
-        else
-            assert(false);
+        return AvrTimer16::FastPwmMode::findFrequency(fCpu, min, max);
     }
+
+    constexpr auto tryConfigureFrequency(unsigned long fCpu, unsigned long min, unsigned long max)
+    {
+        return AvrTimer16::FastPwmMode::tryConfigureFrequency(channel, fCpu, min, max);
+    }
+
+    auto requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool override
+    {
+        auto config = AvrTimer16::FastPwmMode::tryConfigureFrequency(channel, fCpu, min, max);
+        if (!config) return false;
+        timer.apply(config);
+        return true;
+    }
+
+private:
+    AvrTimer16           timer;
+    CompareOutputChannel channel;
+};
+
+/* -------------------------------------------------------------------------- */
+
+class TimerImpl16 : public Timer
+{
+public:
+    using CS = AvrTimer16::ClockSelect;
+
+    TimerImpl16(AvrTimer16 timer_) : timer(timer_) {}
+
+    virtual ~TimerImpl16() = default;
+
+    template <class T> constexpr auto apply(const T &componentConfig)
+    {
+        timer.apply(componentConfig);
+    }
+
+    auto enablePeriodicInterrupt(unsigned long fCpu, float freq, const IrqHandler &handler)
+        -> bool override
+    {
+        // CTC frequency calculation from AVR docs is for a square wave output, using toggle mode.
+        // Two toggles are needed for 1 full square wave cycle, so f_square_wave = 2 * f_timer.
+        const auto config = AvrTimer16::CTCMode::tryConfigureFrequency(fCpu, freq / 2);
+        if (!config) return false;
+        timer.apply(config);
+
+        installIrqHandler(timer.config.irqCompA, handler);
+        timer.TIMSK().OCIEA = 1;
+
+        return true;
+    }
+
+    auto disablePeriodicInterrupt() -> void override { timer.TIMSK().OCIEA = 0; }
+
+    auto stop() -> void override { timer.TCCRB().CS = CS::None; }
+
+private:
+    AvrTimer16 timer;
+};
+
+/* -------------------------------------------------------------------------- */
+
+class SquareWaveImpl16 : public SquareWave
+{
+public:
+    using CS = AvrTimer16::ClockSelect;
+
+    SquareWaveImpl16(AvrTimer16 timer_) : timer(timer_) {}
+
+    virtual ~SquareWaveImpl16() = default;
+
+    template <class T> auto apply(const T &componentConfig) { timer.apply(componentConfig); }
+
+    auto setFrequency(unsigned long fCpu, float freq) -> bool override
+    {
+        const auto config = AvrTimer16::CTCMode::tryConfigureFrequency(fCpu, freq);
+        if (!config) return false;
+        timer.apply(config);
+        timer.TCCRA().COMA = CompareOuputMode::Toggle;
+        return true;
+    }
+
+    constexpr auto tryConfigureFrequency(unsigned long fCpu, float freq)
+    {
+        return AvrTimer16::CTCMode::tryConfigureFrequency(fCpu, freq);
+    }
+
+    auto enableOutput() -> void override { timer.TCCRA().COMA = CompareOuputMode::Toggle; }
+
+    auto disableOutput() -> void override { timer.TCCRA().COMA = CompareOuputMode::None; }
+
+private:
+    AvrTimer16 timer;
 };
 
 } // namespace liquid

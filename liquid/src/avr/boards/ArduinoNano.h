@@ -1,10 +1,11 @@
-#ifndef LIQUID_GENERIC_AVR_H_
-#define LIQUID_GENERIC_AVR_H_
+#ifndef ARDUINO_NANO_AVR_H_
+#define ARDUINO_NANO_AVR_H_
 
 #include "../AdcImpl.h"
-#include "../PwmImpl.h"
 #include "../UartImpl.h"
 #include "../AvrTimer8.h"
+#include "../AvrTimer16.h"
+#include "../AvrInterrupts.h"
 
 #include "../Gpio.h"
 
@@ -57,7 +58,7 @@ private:
 
 
 public:
-    using Timer0 = AvrTimer8<0x44, 0x6e, 0x36>;
+    using Timer0 = AvrTimer8<0x44, 0x6e, 0x35>;
     
     struct Gpio {
         static constexpr GpioSpec D8 = {portB, 0};
@@ -88,18 +89,26 @@ public:
         static constexpr auto BuiltInLed = D13;
     };
 
-    static auto enableSysTimer(unsigned long fCpu) -> void;
+    static constexpr AvrTimer16::Config timer16config[] = {
+        // Timer 1
+        {
+            0x80,
+            0x6F,
+            0x36,
+            Irq::Timer1CompA
+        },
+    };
 
     static auto makeGpio(const GpioSpec &spec) { return liquid::Gpio(spec.regs, spec.pin); }
 
     static auto makePwmD9()
     {
-        return Pwm {new Pwm::Impl {AvrTimer16::Channel::ChannelA}};
+        return PwmImpl {AvrTimer16(timer16config[0]), CompareOutputChannel::ChannelA};
     }
 
     static auto makePwmD10()
     {
-        return Pwm {new Pwm::Impl {AvrTimer16::Channel::ChannelB}};
+        return PwmImpl {AvrTimer16(timer16config[0]), CompareOutputChannel::ChannelB};
     }
 
     static auto makeAdc() -> Adc { return Adc {new Adc::Impl(0x78)}; }

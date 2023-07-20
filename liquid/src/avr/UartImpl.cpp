@@ -6,7 +6,7 @@
 
 using namespace liquid;
 
-static FILE _stdout = {};
+static FILE console = {};
 
 static int uart_putchar(char c, FILE *stream)
 {
@@ -14,14 +14,21 @@ static int uart_putchar(char c, FILE *stream)
     return 0;
 }
 
+static int uart_getchar(FILE *stream)
+{
+    return static_cast<liquid::Usart*>(stream->udata)->rx();
+}
+
 namespace liquid
 {
 
 void installAsStdStreams(Usart &uart)
 {
-    fdev_setup_stream(&_stdout, uart_putchar, nullptr, _FDEV_SETUP_WRITE);
-    fdev_set_udata(&_stdout, &uart);
-    stdout = &_stdout;
+    fdev_setup_stream(&console, uart_putchar, uart_getchar, _FDEV_SETUP_RW);
+    fdev_set_udata(&console, &uart);
+    stdout = &console;
+    stderr = &console;
+    stdin = &console;
 }
 
 auto Usart::setBaud(unsigned long fCpu, unsigned long baud) -> void

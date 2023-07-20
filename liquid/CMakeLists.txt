@@ -7,7 +7,8 @@ add_library(
     src/${LIQUID_PLATFORM}/Interrupts.cpp
     src/${LIQUID_PLATFORM}/AdcImpl.cpp
     src/${LIQUID_PLATFORM}/SysTimer.cpp
-    src/${LIQUID_PLATFORM}/boards/ArduinoNano.cpp)
+    src/${LIQUID_PLATFORM}/boards/ArduinoNano.cpp
+    src/${LIQUID_PLATFORM}/boards/ArduinoMega.cpp)
 
 target_include_directories(${MODULE_ID} PUBLIC 
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/src"
@@ -47,6 +48,8 @@ install(FILES
 install(FILES
     src/avr/boards/ArduinoNano.h
     src/avr/boards/ArduinoNanoIsr.cpp
+    src/avr/boards/ArduinoMega.h
+    src/avr/boards/ArduinoMegaIsr.cpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/avr/boards
     )
 

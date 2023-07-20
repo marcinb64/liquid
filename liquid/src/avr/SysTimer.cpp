@@ -3,5 +3,5 @@
 
 using namespace liquid;
 
-unsigned long SysTimer::sysTime;
+//unsigned long SysTimer::sysTime;
 

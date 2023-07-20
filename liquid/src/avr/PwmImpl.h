@@ -35,7 +35,7 @@ private:
     }
 
 public:
-    Impl(AvrTimer16::Channel channel_) : channel(channel_)
+    Impl(AvrTimer16::Channel channel_) : timer(0x80), channel(channel_)
     {
         timer.setupFastPwm(channel_, CS::ClkIoDiv1024);
     }

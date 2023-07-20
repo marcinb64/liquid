@@ -27,6 +27,8 @@ auto callMethod(void *obj_)
     (obj->*Method)();
 }
 
+auto installIrqHandler(int irq, const IrqHandler &handler) -> void;
+
 }
 
 #endif

@@ -2,6 +2,7 @@
 #define SYSTIMER_H_
 
 #include "Sys.h"
+#include "Interrupts.h"
 
 namespace liquid
 {
@@ -9,7 +10,14 @@ namespace liquid
 class SysTimer
 {
 public:
-    static inline auto getTime() -> unsigned long
+    template<class TimerClass>
+    auto setupWith(TimerClass &timer, unsigned long fCpu, float freq) -> void
+    {
+        IrqHandler handler { callMethod<SysTimer, &SysTimer::isr>, this };
+        timer.enablePeriodicInterrupt(fCpu, freq, handler);
+    }
+
+    inline auto getTime() -> unsigned long
     {
         Sys::disableInterrupts();
         auto t = sysTime;
@@ -17,13 +25,13 @@ public:
         return t;
     }
 
-    static inline auto isr()
+    inline auto isr()
     {
         ++sysTime;
     }
 
 private:
-    static unsigned long sysTime;
+    unsigned long sysTime;
 };
 
 }
