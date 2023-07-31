@@ -37,5 +37,5 @@ include(StaticAnalysis.cmake)
 #
 add_subdirectory(liquid)
 if (NOT LIB_ONLY)
-    add_subdirectory(app)
+    add_subdirectory(demo)
 endif ()

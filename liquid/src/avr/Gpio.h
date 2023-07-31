@@ -33,7 +33,7 @@ public:
 
     inline auto setLow() -> void { set(0); }
 
-    inline auto toggle() -> void { regs.port ^= static_cast<uint8_t>(~pinMask); }
+    inline auto toggle() -> void { regs.port ^= static_cast<uint8_t>(pinMask); }
 
     inline auto get() -> int { return regs.pin & pinMask; }
 

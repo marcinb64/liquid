@@ -220,11 +220,11 @@ public:
                 return getPwmFreq(fCpu, clock.prescaler, maxTimerValue);
         }
 
-        static constexpr auto tryConfigureFrequency(Channel channel, unsigned long fCpu,
-                                                    unsigned long min, unsigned long max)
+        static constexpr auto tryConfigure(Channel channel, unsigned long fCpu,
+                                           unsigned long min, unsigned long max)
         {
             const auto clock = findPrescaler(fCpu, min, max);
-            const auto valid = clock.prescaler == 0;
+            const auto valid = clock.prescaler != 0;
 
             auto cfg = [=](AvrTimer16 &obj) {
                 if (channel == Channel::ChannelA)
@@ -254,7 +254,7 @@ public:
         static constexpr auto findPrescaler(unsigned long ioFreq, unsigned long minFreq,
                                             unsigned long maxFreq) -> const ClockSel &
         {
-            for (unsigned int i = 0; sizeof(clocksArray) / sizeof(*clocksArray); ++i) {
+            for (unsigned int i = 0; i < sizeof(clocksArray) / sizeof(*clocksArray); ++i) {
                 auto f = getPwmFreq(ioFreq, clocksArray[i].prescaler, maxTimerValue);
                 if (f > minFreq && f < maxFreq) return clocksArray[i];
             }
@@ -272,6 +272,59 @@ public:
     friend class PwmImpl;
     friend class TimerImpl16;
     friend class SquareWaveImpl16;
+};
+
+/* -------------------------------------------------------------------------- */
+
+class TimerImpl16 : public Timer
+{
+public:
+    using CS = AvrTimer16::ClockSelect;
+    using ConfigType = decltype(AvrTimer16::CTCMode::tryConfigureFrequency(1, 1.0f));
+
+    TimerImpl16(AvrTimer16 timer_) : timer(timer_) {}
+
+    virtual ~TimerImpl16() = default;
+
+    template <class T> constexpr auto apply(const T &componentConfig)
+    {
+        timer.apply(componentConfig);
+    }
+
+    constexpr auto prepFrequency(unsigned long fCpu, float freq)
+    {
+        return AvrTimer16::CTCMode::tryConfigureFrequency(fCpu, freq / 2);
+    }
+
+    auto enablePeriodicInterrupt(const ConfigType &config, const IrqHandler &handler) -> void
+    {
+        installIrqHandler(timer.config.irqCompA, handler);
+        timer.apply(config);
+        timer.TIMSK().OCIEA = 1;
+    }
+
+    auto enablePeriodicInterrupt(unsigned long fCpu, float freq, const IrqHandler &handler)
+        -> bool override
+    {
+        // CTC frequency calculation from AVR docs is for a square wave output, using toggle mode.
+        // Two toggles are needed for 1 full square wave cycle, so f_square_wave = 2 * f_timer.
+        const auto config = AvrTimer16::CTCMode::tryConfigureFrequency(fCpu, freq / 2);
+        if (!config) return false;
+
+        installIrqHandler(timer.config.irqCompA, handler);
+
+        timer.apply(config);
+        timer.TIMSK().OCIEA = 1;
+
+        return true;
+    }
+
+    auto disablePeriodicInterrupt() -> void override { timer.TIMSK().OCIEA = 0; }
+
+    auto stop() -> void override { timer.TCCRB().CS = CS::None; }
+
+private:
+    AvrTimer16 timer;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -295,14 +348,14 @@ public:
         return AvrTimer16::FastPwmMode::findFrequency(fCpu, min, max);
     }
 
-    constexpr auto tryConfigureFrequency(unsigned long fCpu, unsigned long min, unsigned long max)
+    constexpr auto tryConfigure(unsigned long fCpu, unsigned long min, unsigned long max)
     {
-        return AvrTimer16::FastPwmMode::tryConfigureFrequency(channel, fCpu, min, max);
+        return AvrTimer16::FastPwmMode::tryConfigure(channel, fCpu, min, max);
     }
 
-    auto requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool override
+    auto configure(unsigned long fCpu, unsigned long min, unsigned long max) -> bool override
     {
-        auto config = AvrTimer16::FastPwmMode::tryConfigureFrequency(channel, fCpu, min, max);
+        auto config = AvrTimer16::FastPwmMode::tryConfigure(channel, fCpu, min, max);
         if (!config) return false;
         timer.apply(config);
         return true;
@@ -310,46 +363,7 @@ public:
 
 private:
     AvrTimer16           timer;
-    CompareOutputChannel channel;
-};
-
-/* -------------------------------------------------------------------------- */
-
-class TimerImpl16 : public Timer
-{
-public:
-    using CS = AvrTimer16::ClockSelect;
-
-    TimerImpl16(AvrTimer16 timer_) : timer(timer_) {}
-
-    virtual ~TimerImpl16() = default;
-
-    template <class T> constexpr auto apply(const T &componentConfig)
-    {
-        timer.apply(componentConfig);
-    }
-
-    auto enablePeriodicInterrupt(unsigned long fCpu, float freq, const IrqHandler &handler)
-        -> bool override
-    {
-        // CTC frequency calculation from AVR docs is for a square wave output, using toggle mode.
-        // Two toggles are needed for 1 full square wave cycle, so f_square_wave = 2 * f_timer.
-        const auto config = AvrTimer16::CTCMode::tryConfigureFrequency(fCpu, freq / 2);
-        if (!config) return false;
-        timer.apply(config);
-
-        installIrqHandler(timer.config.irqCompA, handler);
-        timer.TIMSK().OCIEA = 1;
-
-        return true;
-    }
-
-    auto disablePeriodicInterrupt() -> void override { timer.TIMSK().OCIEA = 0; }
-
-    auto stop() -> void override { timer.TCCRB().CS = CS::None; }
-
-private:
-    AvrTimer16 timer;
+    const CompareOutputChannel channel;
 };
 
 /* -------------------------------------------------------------------------- */

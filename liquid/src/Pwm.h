@@ -10,7 +10,7 @@ public:
     virtual ~Pwm() = default;
     
     virtual auto set(float dutyCycle) -> void;
-    virtual auto requestFrequency(unsigned long fCpu, unsigned long min, unsigned long max) -> bool;
+    virtual auto configure(unsigned long fCpu, unsigned long min, unsigned long max) -> bool;
 };
 
 }

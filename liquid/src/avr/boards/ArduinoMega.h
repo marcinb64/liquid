@@ -292,11 +292,6 @@ public:
         return SquareWaveImpl16(makeTimer16(spec.pwm16.timer));
     }
 
-    static auto makeTimer(Timer16 timer) -> TimerImpl16
-    {
-        return TimerImpl16(makeTimer16(timer));
-    }
-
     static auto makeAdc() -> Adc { return Adc {new Adc::Impl(0x78)}; }
 
     static auto makeUsart(int num) -> Usart { return Usart {new Usart::Impl(usartBase[num])}; }
