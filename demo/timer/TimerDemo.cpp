@@ -27,7 +27,7 @@ struct BoardConfig {
 
 static auto squareWave1 = Board::makeSquareWave(BoardConfig::squareWavePin);
 static auto pwm1 = Board::makePwm(BoardConfig::pwmPin);
-static auto timer = TimerImpl16(Board::makeTimer16(Timer16::Timer5)); // TODO add a factory
+static auto timer = TimerImpl16(Board::makeTimer16(Timer16::Timer5));
 
 static auto led = Board::makeGpio(BoardConfig::led);
 

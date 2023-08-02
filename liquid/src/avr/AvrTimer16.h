@@ -5,7 +5,7 @@
 #include "../Reg.h"
 #include "../SquareWave.h"
 #include "../Timer.h"
-#include "TimerModes.h"
+#include "TimerDefs.h"
 
 #include <assert.h>
 #include <math.h>
@@ -39,6 +39,7 @@ public:
         struct Bits : SfrBase {
             RegBits<6, 2> COMA {regAddr};
             RegBits<4, 2> COMB {regAddr};
+            RegBits<2, 2> COMC {regAddr};
             RegBits<0, 2> WGM10 {regAddr};
         };
 
@@ -231,8 +232,8 @@ public:
                     obj.TCCRA().COMA = CompareOuputMode::Clear;
                 else if (channel == Channel::ChannelB)
                     obj.TCCRA().COMB = CompareOuputMode::Clear;
-                // else if (channel == Channel::ChannelC)
-                // obj.TCCRA().COMC = CompareOuputMode::Clear; // TODO
+                else if (channel == Channel::ChannelC)
+                    obj.TCCRA().COMC = CompareOuputMode::Clear;
                 else
                     assert(false);
 

@@ -1,8 +1,10 @@
-#ifndef TIMERMODES_H_
-#define TIMERMODES_H_
+#ifndef TIMER_DEFS_H_
+#define TIMER_DEFS_H_
 
 namespace liquid
 {
+
+enum class Timer16 { Timer1, Timer3, Timer4, Timer5, None };
 
 enum class CompareOutputChannel { None, ChannelA, ChannelB, ChannelC };
 
