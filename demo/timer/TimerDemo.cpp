@@ -41,7 +41,7 @@ static auto led = Board::makeGpio(BoardConfig::led);
  */
 auto outputSquareWave(SquareWave &out, float f) -> void
 {
-    assert(out.setFrequency(F_CPU, f));
+    assert(out.configure(F_CPU, f));
 }
 
 /**
@@ -74,7 +74,7 @@ auto outputSquareWaveOptimized() -> void
 auto outputPwm(Pwm &out, unsigned long f0, unsigned long f1, float v) -> void
 {
     assert(out.configure(F_CPU, f0, f1));
-    out.set(v);
+    out.setDutyCycle(v);
 }
 
 static auto periodicInterrupt(void *) -> void
