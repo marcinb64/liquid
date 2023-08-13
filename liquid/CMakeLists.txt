@@ -10,6 +10,10 @@ add_library(
     src/${LIQUID_PLATFORM}/boards/ArduinoNano.cpp
     src/${LIQUID_PLATFORM}/boards/ArduinoMega.cpp)
 
+file(GLOB COMMON_HEADER_FILES src/*.h)
+file(GLOB PLATFORM_HEADER_FILES src/${LIQUID_PLATFORM}/*.h)
+file(GLOB BOARD_HEADER_FILES src/${LIQUID_PLATFORM}/boards/*.h)
+
 target_include_directories(${MODULE_ID} PUBLIC 
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/src"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/src/${LIQUID_PLATFORM}"
@@ -22,36 +26,16 @@ target_compile_definitions(${MODULE_ID} PUBLIC LIQUID_BOARD_${LIQUID_BOARD})
 install(TARGETS ${MODULE_ID})
 
 install(FILES
-    src/Adc.h
-    src/Interrupts.h
-    src/Pwm.h
-    src/Reg.h
-    src/Sys.h
-    src/SysTimer.h
-    src/Uart.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid
-    )
+    ${COMMON_HEADER_FILES}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid)
 
 install(FILES
-    src/avr/AdcImpl.h
-    src/avr/AvrAdc.h
-    src/avr/AvrTimer8.h
-    src/avr/AvrTimer16.h
-    src/avr/BoardSelector.h
-    src/avr/BoardIsrSelector.cpp
-    src/avr/Gpio.h
-    src/avr/PwmImpl.h
-    src/avr/UartImpl.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/avr
-    )
+    ${PLATFORM_HEADER_FILES}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/${LIQUID_PLATFORM})
 
 install(FILES
-    src/avr/boards/ArduinoNano.h
-    src/avr/boards/ArduinoNanoIsr.cpp
-    src/avr/boards/ArduinoMega.h
-    src/avr/boards/ArduinoMegaIsr.cpp
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/avr/boards
-    )
+    ${BOARD_HEADER_FILES}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/${LIQUID_PLATFORM}/boards)
 
     
 if (BUILD_TESTING)

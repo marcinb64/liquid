@@ -1,11 +1,9 @@
-* Version 0.1
-  - [X] Basic cross-compile build with toolchain file
-  - [X] Unit tests
-  - [X] Conan libs
-  - [X] Export conan lib for avr
-  - [X] Use conan lib for avr
-  - [X] Test on target
-  - [X] Build instructions
+* Version 0.3
+  - [X] GPIO
+  - [X] PWM
+  - [X] Square wave
+  - [X] Timer interrupt
+  - [X] Boards
   
 * Notes
 ** Configure and build target

@@ -9,9 +9,9 @@ class LiquidRecipe(ConanFile):
     # Optional metadata
     license = "MIT"
     author = "marcinb64@gmail.com"
-    #url = "http://site.com"
+    url = "https://github.com/marcinb64/liquid"
     description = "C++ microcontroller interface"
-    topics = ("foundations", "utility", "arduino", "microcontroller", "embedded", "avr")
+    topics = ("utility", "arduino", "microcontroller", "embedded", "avr")
 
     # Binary configuration
     settings = "compiler", "build_type", "arch"
@@ -19,19 +19,21 @@ class LiquidRecipe(ConanFile):
     default_options = {"shared": False, "fPIC": False, "platform": "avr"}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "CompilerWarnings.cmake", "StaticAnalysis.cmake", "liquid/*", "liquid/src/*", "liquid/src/avr/*", "liquid/src/avr/boards/*"
+    exports_sources = "CMakeLists.txt", "CompilerWarnings.cmake", "StaticAnalysis.cmake", "liquid/*", "demo/*"
+    generators = "CMakeDeps"
 
     def layout(self):
         cmake_layout(self)
 
     def generate(self):
         tc = CMakeToolchain(self)
+        tc.presets_prefix = "conan-" + str(self.options.platform)
         tc.generate()
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure(variables={"LIB_ONLY": "True", "LIQUID_PLATFORM": self.options.platform, "ENABLE_SANITIZERS": "Off"})
-        cmake.build()
+        cmake.configure(variables={"LIQUID_PLATFORM": self.options.platform, "ENABLE_SANITIZERS": "Off"})
+        cmake.build(target="liquid")
 
     def package(self):
         cmake = CMake(self)
