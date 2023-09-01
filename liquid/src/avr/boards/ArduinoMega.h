@@ -136,7 +136,7 @@ private:
 public:
     using Timer0 = AvrTimer8<0x44, 0x6e, 0x35>;
 
-    static auto makeTimer16(Timer16 num) -> AvrTimer16
+    static constexpr auto makeTimer16(Timer16 num) -> AvrTimer16
     {
         return AvrTimer16(timer16config[static_cast<int>(num)]);
     }

@@ -120,7 +120,7 @@ public:
         return static_cast<uint16_t>(cpuFreq / (prescaler * freq) - 1);
     }
 
-    auto writeWgm(int mode)
+    auto writeWgm(int mode) const
     {
         TCCRB().WGM32 = (mode >> 2) & 0x3;
         TCCRA().WGM10 = mode & 0x3;
@@ -178,7 +178,7 @@ public:
             const auto valid = clock.prescaler != 0;
             const auto ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
 
-            auto c = [=](AvrTimer16 &obj) {
+            auto c = [=](const AvrTimer16 &obj) {
                 obj.writeWgm(AvrTimer16::WaveformGenerationMode::CtcToOcr);
                 obj.TCCRB().CS = clock.value;
                 obj.OCRA() = ocrValue;
@@ -188,6 +188,44 @@ public:
 
             return ComponentConfig<decltype(c)> {valid, c};
         }
+
+        static constexpr auto configurePeriodicInterrupt(unsigned long ioFreq, float freq, const IrqHandler &handler)
+        {
+            const auto clock = findClock(ioFreq, freq / 2);
+            const auto valid = clock.prescaler != 0;
+            const auto ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq / 2) : 0;
+
+            auto c = [=](const AvrTimer16 &obj) {
+                obj.writeWgm(AvrTimer16::WaveformGenerationMode::CtcToOcr);
+                obj.TCCRB().CS = clock.value;
+                obj.OCRA() = ocrValue;
+                obj.TIMSK().OCIEA = 1;
+                installIrqHandler(obj.config.irqCompA, handler);
+
+                return true;
+            };
+
+            return ComponentConfig<decltype(c)> {valid, c};
+        }
+
+        static constexpr auto configureSquareWave(unsigned long ioFreq, float freq)
+        {
+            const auto clock = findClock(ioFreq, freq);
+            const auto valid = clock.prescaler != 0;
+            const auto ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
+
+            auto c = [=](const AvrTimer16 &obj) {
+                obj.writeWgm(AvrTimer16::WaveformGenerationMode::CtcToOcr);
+                obj.TCCRB().CS = clock.value;
+                obj.OCRA() = ocrValue;
+                obj.TCCRA().COMA = CompareOuputMode::Toggle;
+                
+                return true;
+            };
+
+            return ComponentConfig<decltype(c)> {valid, c};
+        }
+        
     };
 
     struct FastPwmMode {
@@ -200,7 +238,7 @@ public:
         {
             const auto value = static_cast<unsigned int>(dutyCycle * maxTimerValue);
 
-            auto cfg = [=](AvrTimer16 &obj) {
+            auto cfg = [=](const AvrTimer16 &obj) {
                 if (channel == Channel::ChannelA)
                     obj.OCRA() = value;
                 else if (channel == Channel::ChannelB)
@@ -230,7 +268,7 @@ public:
             const auto clock = findPrescaler(fCpu, min, max);
             const auto valid = clock.prescaler != 0;
 
-            auto cfg = [=](AvrTimer16 &obj) {
+            auto cfg = [=](const AvrTimer16 &obj) {
                 if (channel == Channel::ChannelA)
                     obj.TCCRA().COMA = CompareOuputMode::Clear;
                 else if (channel == Channel::ChannelB)
@@ -268,7 +306,7 @@ public:
 
     constexpr AvrTimer16(const Config &config_) : config(config_) {}
 
-    template <class T> auto apply(const ComponentConfig<T> &componentConfig)
+    template <class T> auto apply(const ComponentConfig<T> &componentConfig) const
     {
         componentConfig.configFunc(*this);
     }
@@ -289,23 +327,6 @@ public:
     TimerImpl16(AvrTimer16 timer_) : timer(timer_) {}
 
     virtual ~TimerImpl16() = default;
-
-    template <class T> constexpr auto apply(const T &componentConfig)
-    {
-        timer.apply(componentConfig);
-    }
-
-    constexpr auto prepFrequency(unsigned long fCpu, float freq)
-    {
-        return AvrTimer16::CTCMode::configure(fCpu, freq / 2);
-    }
-
-    auto enablePeriodicInterrupt(const ConfigType &config, const IrqHandler &handler) -> void
-    {
-        installIrqHandler(timer.config.irqCompA, handler);
-        timer.apply(config);
-        timer.TIMSK().OCIEA = 1;
-    }
 
     auto enablePeriodicInterrupt(unsigned long fCpu, float freq, const IrqHandler &handler)
         -> bool override
@@ -350,11 +371,6 @@ public:
         -> unsigned long
     {
         return AvrTimer16::FastPwmMode::findFrequency(fCpu, min, max);
-    }
-
-    constexpr auto tryConfigure(unsigned long fCpu, unsigned long min, unsigned long max)
-    {
-        return AvrTimer16::FastPwmMode::configure(channel, fCpu, min, max);
     }
 
     auto configure(unsigned long fCpu, unsigned long min, unsigned long max) -> bool override

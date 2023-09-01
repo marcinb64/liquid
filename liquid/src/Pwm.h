@@ -9,8 +9,8 @@ class Pwm
 public:
     virtual ~Pwm() = default;
     
-    virtual auto configure(unsigned long fCpu, unsigned long min, unsigned long max) -> bool;
-    virtual auto setDutyCycle(float dutyCycle) -> void;
+    virtual auto configure(unsigned long fCpu, unsigned long min, unsigned long max) -> bool = 0;
+    virtual auto setDutyCycle(float dutyCycle) -> void = 0;
 };
 
 }
