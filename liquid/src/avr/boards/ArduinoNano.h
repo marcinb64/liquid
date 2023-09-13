@@ -46,8 +46,6 @@ private:
     };
 
 public:
-    using Timer0 = AvrTimer8<0x44, 0x6e, 0x35>;
-
     struct Gpio {
         static constexpr auto COMA = CompareOutputChannel::ChannelA;
         static constexpr auto COMB = CompareOutputChannel::ChannelB;
@@ -81,10 +79,30 @@ public:
         static constexpr auto BuiltInLed = D13;
     };
 
+    static constexpr AvrTimer8::Config timer8Config[] = {
+        // Timer 0
+        {
+            0x44,
+            0x6e,
+            0x35,
+            Irq::Timer0CompA,
+        },
+    };
+
     static constexpr AvrTimer16::Config timer16config[] = {
         // Timer 1
         {0x80, 0x6F, 0x36, Irq::Timer1CompA},
     };
+
+    static constexpr auto makeTimer8(Timer8Id num) -> AvrTimer8
+    {
+        return AvrTimer8(timer8Config[static_cast<int>(num)]);
+    }
+
+    static constexpr auto makeTimer16(Timer16 num) -> AvrTimer16
+    {
+        return AvrTimer16(timer16config[static_cast<int>(num)]);
+    }
 
     static auto makeGpio(const GpioSpec &spec) { return liquid::Gpio(spec, spec.pin); }
 

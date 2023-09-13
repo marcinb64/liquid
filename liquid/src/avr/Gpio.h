@@ -22,6 +22,11 @@ struct GpioSpec {
         CompareOutputChannel channel = CompareOutputChannel::None;
     };
 
+    struct Pwm8 {
+        Timer8Id             timer = Timer8Id::None;
+        CompareOutputChannel channel = CompareOutputChannel::None;
+    };
+
     struct Pcint {
         int     pcint = -1;
         uint8_t pcmskMask = 0;
@@ -52,8 +57,23 @@ struct GpioSpec {
     {
     }
 
+    constexpr GpioSpec(AvrGpioRegs &regs_, int pin_, const Pcint &pcint_, Pwm8 pwm8_)
+        : regs(regs_), pin(pin_), pcint(pcint_), pwm8(pwm8_)
+    {
+    }
+
+    constexpr GpioSpec(AvrGpioRegs &regs_, int pin_, const Pcint &pcint_, Pwm16 pwm16_, Pwm8 pwm8_)
+        : regs(regs_), pin(pin_), pcint(pcint_), pwm16(pwm16_), pwm8(pwm8_)
+    {
+    }
+
     constexpr GpioSpec(AvrGpioRegs &regs_, int pin_, Pwm16 pwm16_)
         : regs(regs_), pin(pin_), pwm16(pwm16_)
+    {
+    }
+
+    constexpr GpioSpec(AvrGpioRegs &regs_, int pin_, Pwm8 pwm8_)
+        : regs(regs_), pin(pin_), pwm8(pwm8_)
     {
     }
 
@@ -61,6 +81,7 @@ struct GpioSpec {
     int          pin;
     Pcint        pcint;
     Pwm16        pwm16 = {Timer16::None, CompareOutputChannel::None};
+    Pwm8         pwm8 = {Timer8Id::None, CompareOutputChannel::None};
 
     constexpr bool operator==(const GpioSpec &other) const
     {
@@ -105,12 +126,15 @@ public:
         enableGpioInterrupts(pciintToBank(spec.pcint.pcint));
     }
 
-    inline auto disableInterrupt() -> void { writeByMask(spec.regs.pcmsk, spec.pcint.pcmskMask, 0); }
+    inline auto disableInterrupt() -> void
+    {
+        writeByMask(spec.regs.pcmsk, spec.pcint.pcmskMask, 0);
+    }
 
 private:
-    const GpioSpec    &spec;
+    const GpioSpec     &spec;
     const volatile Sfr8 portReg;
-    const uint8_t      pinMask;
+    const uint8_t       pinMask;
 
     static inline auto pciintToBank(int pcint) -> int { return pcint / 8; }
 

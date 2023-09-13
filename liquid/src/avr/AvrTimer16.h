@@ -5,6 +5,7 @@
 #include "../Reg.h"
 #include "../SquareWave.h"
 #include "../Timer.h"
+#include "../util.h"
 #include "TimerDefs.h"
 
 #include <assert.h>
@@ -12,13 +13,6 @@
 
 namespace liquid
 {
-
-template <class T> struct ComponentConfig {
-    bool isValid;
-    T    configFunc;
-
-    operator bool() const { return isValid; }
-};
 
 class AvrTimer16
 {
@@ -68,6 +62,8 @@ public:
     constexpr auto TCCRB() const
     {
         struct Bits : SfrBase {
+            RegBits<7> ICNC {regAddr};
+            RegBits<6> ICES {regAddr};
             RegBits<3, 2> WGM32 {regAddr};
             RegBits<0, 3> CS {regAddr};
         };

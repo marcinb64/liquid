@@ -102,6 +102,17 @@ private:
         0x130 // USART3
     };
 
+    static constexpr AvrTimer8::Config timer8Config[] = {
+        // Timer 0
+        {
+            0x44,
+            0x6e,
+            0x35,
+            Irq::Timer0CompA,
+        },
+        // TODO add Timer 2
+    };
+
     static constexpr AvrTimer16::Config timer16config[] = {
         // Timer 1
         {
@@ -134,7 +145,10 @@ private:
     };
 
 public:
-    using Timer0 = AvrTimer8<0x44, 0x6e, 0x35>;
+    static constexpr auto makeTimer8(Timer8Id num) -> AvrTimer8
+    {
+        return AvrTimer8(timer8Config[static_cast<int>(num)]);
+    }
 
     static constexpr auto makeTimer16(Timer16 num) -> AvrTimer16
     {
@@ -168,17 +182,17 @@ public:
         static constexpr GpioSpec D1 = {portE, 1};
         static constexpr GpioSpec D2 = {portE, 4, {Timer16::Timer3, COMB}};
         static constexpr GpioSpec D3 = {portE, 5, {Timer16::Timer3, COMC}};
-        static constexpr GpioSpec D4 = {portG, 5};
+        static constexpr GpioSpec D4 = {portG, 5, {Timer8Id::Timer0, COMB}};
         static constexpr GpioSpec D5 = {portE, 3, {Timer16::Timer3, COMA}};
         static constexpr GpioSpec D6 = {portH, 3, {Timer16::Timer4, COMA}};
         static constexpr GpioSpec D7 = {portH, 4, {Timer16::Timer4, COMB}};
 
         static constexpr GpioSpec D8 = {portH, 5, {Timer16::Timer4, COMC}};
-        static constexpr GpioSpec D9 = {portH, 6};
-        static constexpr GpioSpec D10 = {portB, 4, {4, 4}};
+        static constexpr GpioSpec D9 = {portH, 6, {Timer8Id::Timer2, COMB}};
+        static constexpr GpioSpec D10 = {portB, 4, {4, 4}, {Timer8Id::Timer2, COMA}};
         static constexpr GpioSpec D11 = {portB, 5, {5, 5}, {Timer16::Timer1, COMA}};
         static constexpr GpioSpec D12 = {portB, 6, {6, 6}, {Timer16::Timer1, COMB}};
-        static constexpr GpioSpec D13 = {portB, 7, {7, 7}, {Timer16::Timer1, COMC}};
+        static constexpr GpioSpec D13 = {portB, 7, {7, 7}, {Timer16::Timer1, COMC}, {Timer8Id::Timer0, COMA}};
         static constexpr GpioSpec D14 = {portJ, 1, {10, 1}};
         static constexpr GpioSpec D15 = {portJ, 0, {9, 0}};
 
