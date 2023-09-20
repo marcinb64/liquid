@@ -10,6 +10,7 @@ project(
 option(WARNINGS_AS_ERRORS On)
 option(ENABLE_CLANG_TIDY Off)
 option(ENABLE_SANITIZERS Off)
+option(ENABLE_UTEST Off)
 
 # Project-specific settings
 add_library(project_options INTERFACE)
@@ -26,6 +27,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(StaticAnalysis.cmake)
+
+if (ENABLE_UTEST)
+    include(CTest)
+endif ()
 
 #
 # Project structure

@@ -1,22 +1,22 @@
 #include "../Sys.h"
-#include <avr/interrupt.h>
 
 using namespace liquid;
 
 extern char *__brkval;
 
+
 unsigned int Sys::getFreeMemory()
 {
     char stack;
-    return &stack - __brkval;
+    return static_cast<unsigned int>(&stack - __brkval);
 }
 
 auto Sys::enableInterrupts() -> void
 {
-    sei();
+    __asm__ __volatile__ ("sei" ::: "memory");
 }
 
 auto Sys::disableInterrupts() -> void
 {
-    cli();
+    __asm__ __volatile__ ("cli" ::: "memory");
 }

@@ -1,14 +1,9 @@
-// Include mock Reg.h instead of this file, when building unit tests.
-// The mock will define LIQUID_REG_H_
-#ifdef TESTING
-#include <TestReg.h>
-#endif
-
 #ifndef LIQUID_REG_H_
 #define LIQUID_REG_H_
 
-
 #include <stdint.h>
+
+extern uint8_t mock_mem[1024];
 
 namespace liquid
 {
@@ -19,14 +14,14 @@ constexpr static auto LOW  = 0;
 using Sfr8  = volatile uint8_t &;
 using Sfr16 = volatile uint16_t &;
 
-constexpr Sfr8 sfr8(uint16_t addr)
+Sfr8 sfr8(uint16_t addr)
 {
-    return *reinterpret_cast<volatile uint8_t *>(addr);
+    return *(mock_mem + addr);
 }
 
-constexpr Sfr16 sfr16(uint16_t addr)
+Sfr16 sfr16(uint16_t addr)
 {
-    return *reinterpret_cast<volatile uint16_t *>(addr);
+    return *reinterpret_cast<volatile uint16_t *>(mock_mem + addr);
 }
 
 inline auto writeBit(Sfr8 &reg, int bit, bool high) -> void
@@ -58,21 +53,21 @@ template <uint8_t lsb, uint8_t width = 1> struct RegBits {
     void operator=(uint8_t value) const
     {
         if constexpr (width == 1) {
-            auto r = reinterpret_cast<volatile uint8_t *>(addr);
+            auto r = reinterpret_cast<volatile uint8_t *>(mock_mem + addr);
             if (value != 0) {
                 *r |= static_cast<uint8_t>(1 << lsb);
             } else {
                 *r &= static_cast<uint8_t>(~(1 << lsb));
             }
         } else {
-            auto r = reinterpret_cast<volatile uint8_t *>(addr); // NOLINT
+            auto r = reinterpret_cast<volatile uint8_t *>(mock_mem + addr);
             *r     = static_cast<uint8_t>((*r & ~mask()) | (value << lsb));
         }
     }
 
     operator int() const
     {
-        auto r = reinterpret_cast<volatile uint8_t *>(addr);
+        auto r = reinterpret_cast<volatile uint8_t *>(mock_mem + addr);
         return *r & mask();
     }
 

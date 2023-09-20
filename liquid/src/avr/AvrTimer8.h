@@ -262,7 +262,7 @@ public:
 
         static constexpr auto getPwmFreq(unsigned long ioFreq, unsigned int prescaler) -> unsigned long
         {
-            return ioFreq / (prescaler * 256);
+            return ioFreq / prescaler / 256;
         }
 
         static constexpr auto findPrescaler(unsigned long ioFreq, unsigned long minFreq,

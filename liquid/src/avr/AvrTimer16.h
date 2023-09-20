@@ -172,7 +172,7 @@ public:
         {
             const auto clock = findClock(ioFreq, freq);
             const auto valid = clock.prescaler != 0;
-            const auto ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
+            const uint16_t ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
 
             auto c = [=](const AvrTimer16 &obj) {
                 obj.writeWgm(AvrTimer16::WaveformGenerationMode::CtcToOcr);
@@ -189,7 +189,7 @@ public:
         {
             const auto clock = findClock(ioFreq, freq / 2);
             const auto valid = clock.prescaler != 0;
-            const auto ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq / 2) : 0;
+            const uint16_t ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq / 2) : 0;
 
             auto c = [=](const AvrTimer16 &obj) {
                 obj.writeWgm(AvrTimer16::WaveformGenerationMode::CtcToOcr);
@@ -208,7 +208,7 @@ public:
         {
             const auto clock = findClock(ioFreq, freq);
             const auto valid = clock.prescaler != 0;
-            const auto ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
+            const uint16_t ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
 
             auto c = [=](const AvrTimer16 &obj) {
                 obj.writeWgm(AvrTimer16::WaveformGenerationMode::CtcToOcr);
@@ -232,7 +232,7 @@ public:
 
         static constexpr auto setDutyCycle(float dutyCycle, Channel channel)
         {
-            const auto value = static_cast<unsigned int>(dutyCycle * maxTimerValue);
+            const auto value = static_cast<uint16_t>(dutyCycle * maxTimerValue);
 
             auto cfg = [=](const AvrTimer16 &obj) {
                 if (channel == Channel::ChannelA)

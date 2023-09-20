@@ -15,12 +15,16 @@ class LiquidRecipe(ConanFile):
 
     # Binary configuration
     settings = "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False], "platform": ["avr"]}
+    options = {"shared": [True, False], "fPIC": [True, False], "platform": ["avr", "linux"]}
     default_options = {"shared": False, "fPIC": False, "platform": "avr"}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "CompilerWarnings.cmake", "StaticAnalysis.cmake", "liquid/*", "demo/*"
     generators = "CMakeDeps"
+
+    def requirements(self):
+        if (self.options.platform == 'linux'):
+            self.requires("catch2/3.1.0")
 
     def layout(self):
         cmake_layout(self)

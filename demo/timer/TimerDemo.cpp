@@ -87,10 +87,10 @@ auto outputPwmOptimized()
     constexpr auto OutA = CompareOutputChannel::ChannelB;
     using Pwm = AvrTimer16::FastPwmMode;
 
-    static_assert(pwm1.findFrequency(F_CPU, 900, 1200) == 0);       // frequency range too narrow
-    static_assert(pwm1.findFrequency(F_CPU, 1, 10) == 0);           // frequency range too low
-    static_assert(pwm1.findFrequency(F_CPU, 100000, 9100200) == 0); // frequency range too high
-    static_assert(pwm1.findFrequency(F_CPU, 10000, 40000) != 0);    // accepteable range
+    static_assert(Pwm::findFrequency(F_CPU, 900, 1200) == 0);       // frequency range too narrow
+    static_assert(Pwm::findFrequency(F_CPU, 1, 10) == 0);           // frequency range too low
+    static_assert(Pwm::findFrequency(F_CPU, 100000, 9100200) == 0); // frequency range too high
+    static_assert(Pwm::findFrequency(F_CPU, 10000, 40000) != 0);    // accepteable range
 
     constexpr auto config1 = Pwm::configure(OutA, F_CPU, 10000, 40000);
     static_assert(config1.isValid);
