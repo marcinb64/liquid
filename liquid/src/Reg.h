@@ -73,7 +73,7 @@ template <uint8_t lsb, uint8_t width = 1> struct RegBits {
     operator int() const
     {
         auto r = reinterpret_cast<volatile uint8_t *>(addr);
-        return *r & mask();
+        return (*r & mask()) >> lsb;
     }
 
     [[nodiscard]] static constexpr uint8_t mask()
