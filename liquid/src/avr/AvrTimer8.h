@@ -14,6 +14,8 @@
 namespace liquid
 {
 
+// Only for Timer 0 at this point.
+// Timer2 uses different clock prescalers.
 class AvrTimer8
 {
 public:
@@ -118,10 +120,6 @@ public:
     static constexpr ClockSel clockNone = {0, 0};
     static constexpr ClockSel clocksArray[] = {{5, 1024}, {4, 256}, {3, 64}, {2, 8}, {1, 1}};
 
-    // TODO clocks array is different for Timer 2
-    // static constexpr ClockSel clocksArray[] = {{7, 1024}, {6, 256}, {5, 128}, {4, 64}, {3, 32},
-    // {2, 8}, {1, 1}};
-
     /* -------------------------------------------------------------------------- */
 
     struct CTCMode {
@@ -152,8 +150,8 @@ public:
 
         static constexpr auto configure(unsigned long ioFreq, float freq)
         {
-            const auto clock = findClock(ioFreq, freq);
-            const auto valid = clock.prescaler != 0;
+            const auto    clock = findClock(ioFreq, freq);
+            const auto    valid = clock.prescaler != 0;
             const uint8_t ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
 
             auto c = [=](const AvrTimer8 &obj) {
@@ -170,8 +168,8 @@ public:
         static constexpr auto configurePeriodicInterrupt(unsigned long ioFreq, float freq,
                                                          const IrqHandler &handler)
         {
-            const auto clock = findClock(ioFreq, freq / 2);
-            const auto valid = clock.prescaler != 0;
+            const auto    clock = findClock(ioFreq, freq / 2);
+            const auto    valid = clock.prescaler != 0;
             const uint8_t ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq / 2) : 0;
 
             auto c = [=](const AvrTimer8 &obj) {
@@ -189,8 +187,8 @@ public:
 
         static constexpr auto configureSquareWave(unsigned long ioFreq, float freq)
         {
-            const auto clock = findClock(ioFreq, freq);
-            const auto valid = clock.prescaler != 0;
+            const auto    clock = findClock(ioFreq, freq);
+            const auto    valid = clock.prescaler != 0;
             const uint8_t ocrValue = valid ? getOcr(ioFreq, clock.prescaler, freq) : 0;
 
             auto c = [=](const AvrTimer8 &obj) {
@@ -260,7 +258,8 @@ public:
             return ComponentConfig<decltype(cfg)> {valid, cfg};
         }
 
-        static constexpr auto getPwmFreq(unsigned long ioFreq, unsigned int prescaler) -> unsigned long
+        static constexpr auto getPwmFreq(unsigned long ioFreq, unsigned int prescaler)
+            -> unsigned long
         {
             return ioFreq / prescaler / 256;
         }
@@ -356,10 +355,9 @@ public:
     }
 
 private:
-    AvrTimer8                 timer;
+    AvrTimer8                  timer;
     const CompareOutputChannel channel;
 };
-
 
 /* -------------------------------------------------------------------------- */
 

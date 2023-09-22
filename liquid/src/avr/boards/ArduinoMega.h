@@ -110,7 +110,6 @@ private:
             0x35,
             Irq::Timer0CompA,
         },
-        // TODO add Timer 2
     };
 
     static constexpr AvrTimer16::Config timer16config[] = {
