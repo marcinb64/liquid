@@ -13,6 +13,7 @@ add_library(
 file(GLOB COMMON_HEADER_FILES src/*.h)
 file(GLOB PLATFORM_HEADER_FILES src/${LIQUID_PLATFORM}/*.h)
 file(GLOB BOARD_HEADER_FILES src/${LIQUID_PLATFORM}/boards/*.h)
+file(GLOB ISR_FILES src/${LIQUID_PLATFORM}/boards/*Isr.cpp)
 
 target_include_directories(${MODULE_ID} PUBLIC 
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/src"
@@ -31,10 +32,12 @@ install(FILES
 
 install(FILES
     ${PLATFORM_HEADER_FILES}
+    src/${LIQUID_PLATFORM}/BoardIsrSelector.cpp
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/${LIQUID_PLATFORM})
 
 install(FILES
     ${BOARD_HEADER_FILES}
+    ${ISR_FILES}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/liquid/${LIQUID_PLATFORM}/boards)
 
     

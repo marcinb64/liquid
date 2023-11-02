@@ -15,6 +15,8 @@ struct Irq {
     static constexpr auto Pcint0 = 5;
     static constexpr auto Pcint1 = 6;
     static constexpr auto Pcint2 = 7;
+
+    static constexpr auto Max = 8;
 };
 
 }

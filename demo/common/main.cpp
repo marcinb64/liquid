@@ -6,7 +6,6 @@
 #include <util/delay.h>
 
 using namespace liquid;
-using Board = liquid::ArduinoMega;
 
 constexpr static auto uartBaudRate = 19200L;
 

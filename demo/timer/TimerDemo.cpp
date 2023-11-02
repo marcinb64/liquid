@@ -7,31 +7,24 @@
 #include <util/delay.h>
 
 using namespace liquid;
-using Board = liquid::ArduinoMega;
 
 constexpr static auto DEBUG = false;
 constexpr static auto HEARTBEAT = false;
 
 struct BoardConfig {
     static constexpr auto led = Board::Gpio::BuiltInLed;
-    static constexpr auto squareWavePin = Board::Gpio::D5;
-    static constexpr auto pwmPin = Board::Gpio::D12;
+    static constexpr auto outputPin = Board::Gpio::D9;
 
     static void setupPinmux()
     {
         Board::makeGpio(led).asOutput();
-        Board::makeGpio(squareWavePin).asOutput();
-        Board::makeGpio(pwmPin).asOutput();
+        Board::makeGpio(outputPin).asOutput();
     }
 };
 
-static auto squareWave1 = Board::makeSquareWave(BoardConfig::squareWavePin);
-static auto pwm1 = Board::makePwm(BoardConfig::pwmPin);
-static auto timer = TimerImpl16(Board::makeTimer16(Timer16::Timer5));
-
 static auto led = Board::makeGpio(BoardConfig::led);
 
-/* -------------------------------------------------------------------------- */
+// ----------------------------------------------------------------------------
 
 /**
  * Output square wave using a hardware timer
@@ -39,9 +32,15 @@ static auto led = Board::makeGpio(BoardConfig::led);
  * Calculates the parameters at run time.
  * Can work with any SquareWave implementation, using different hardware timers.
  */
-auto outputSquareWave([[maybe_unused]] SquareWave &out, [[maybe_unused]] float f) -> void
+auto outputSquareWave(SquareWave &out, float f) -> void
 {
-    assert(out.configure(F_CPU, f));
+    out.configure(F_CPU, f);
+}
+
+auto squareWaveWrapperDemo()
+{
+    auto squareWave1 = Board::makeSquareWave(BoardConfig::outputPin);
+    outputSquareWave(squareWave1, 300);
 }
 
 /**
@@ -50,7 +49,7 @@ auto outputSquareWave([[maybe_unused]] SquareWave &out, [[maybe_unused]] float f
  * If all inputs are know at compile time, it offers compile-time frequency
  * calculation and range checking.
  */
-auto outputSquareWaveOptimized() -> void
+auto squareWaveDirectDemo()
 {
     using CTC = AvrTimer16::CTCMode;
 
@@ -63,9 +62,11 @@ auto outputSquareWaveOptimized() -> void
     constexpr auto cfg3 = CTC::configureSquareWave(F_CPU, 300);
     static_assert(cfg3.isValid);
 
-    constexpr auto t3 = Board::makeTimer16(Timer16::Timer3);
-    t3.apply(cfg3);
+    constexpr auto t1 = Board::makeTimer16(Timer16::Timer1);
+    t1.apply(cfg3);
 }
+
+// -----------------------------------------------------------------------------
 
 /**
  * Output PWM using a hardware timer
@@ -77,14 +78,20 @@ auto outputPwm(Pwm &out, [[maybe_unused]] unsigned long f0, [[maybe_unused]] uns
                float v) -> void
 {
     const auto success = out.configure(F_CPU, f0, f1);
-    assert(success);
-    out.setDutyCycle(v);
+    if (success)
+        out.setDutyCycle(v);
 }
 
-auto outputPwmOptimized()
+auto pwmWrapperDemo()
+{
+    auto pwm1 = Board::makePwm(BoardConfig::outputPin);
+    outputPwm(pwm1, 10000, 40000, 0.25f);
+}
+
+auto pwmDirectDemo()
 {
     constexpr auto t1 = Board::makeTimer16(Timer16::Timer1);
-    constexpr auto OutA = CompareOutputChannel::ChannelB;
+    constexpr auto OutA = CompareOutputChannel::ChannelA;
     using Pwm = AvrTimer16::FastPwmMode;
 
     static_assert(Pwm::findFrequency(F_CPU, 900, 1200) == 0);       // frequency range too narrow
@@ -96,34 +103,35 @@ auto outputPwmOptimized()
     static_assert(config1.isValid);
     t1.apply(config1);
 
-    constexpr auto config2 = Pwm::setDutyCycle(0.75f, OutA);
+    constexpr auto config2 = Pwm::setDutyCycle(0.25f, OutA);
     static_assert(config2.isValid);
     t1.apply(config2);
 }
 
+// -----------------------------------------------------------------------------
+
 static auto periodicInterrupt(void *) -> void
 {
-    led.toggle();
+    Board::makeGpio(BoardConfig::outputPin).toggle();
 }
 
-auto setupLedBlinker() -> void
+auto periodicInterruptWrapperDemo() -> void
 {
+    auto timer = TimerImpl16(Board::makeTimer16(Timer16::Timer1));
+
     // freq too low
-    assert(timer.enablePeriodicInterrupt(F_CPU, 0.001f, IrqHandler {periodicInterrupt, nullptr}) ==
-           false);
+    timer.enablePeriodicInterrupt(F_CPU, 0.001f, IrqHandler {periodicInterrupt, nullptr});
 
     // freq too high
-    assert(timer.enablePeriodicInterrupt(F_CPU, 99000000.0f,
-                                         IrqHandler {periodicInterrupt, nullptr}) == false);
+    timer.enablePeriodicInterrupt(F_CPU, 99000000.0f, IrqHandler {periodicInterrupt, nullptr});
 
     // toggle the LED every 1s
-    assert(timer.enablePeriodicInterrupt(F_CPU, 1.0f, IrqHandler {periodicInterrupt, nullptr}) ==
-           true);
+    timer.enablePeriodicInterrupt(F_CPU, 1.0f, IrqHandler {periodicInterrupt, nullptr});
 }
 
-auto setupLedBlinkerOptimized() -> void
+auto periodicInterruptDirectDemo() -> void
 {
-    constexpr auto t5 = Board::makeTimer16(Timer16::Timer5);
+    constexpr auto t1 = Board::makeTimer16(Timer16::Timer1);
 
     // freq too low
     constexpr auto cfg1 = AvrTimer16::CTCMode::configurePeriodicInterrupt(
@@ -139,28 +147,36 @@ auto setupLedBlinkerOptimized() -> void
     constexpr auto cfg3 = AvrTimer16::CTCMode::configurePeriodicInterrupt(
         F_CPU, 1.0f, IrqHandler {periodicInterrupt, nullptr});
     static_assert(cfg3.isValid == true);
-    t5.apply(cfg3);
+
+    t1.apply(cfg3);
 }
 
 /* -------------------------------------------------------------------------- */
 
-static constexpr auto useOptimizedVersions = false;
+#include <SysTimer.h>
 
 auto appMain() -> void
 {
     BoardConfig::setupPinmux();
 
-    if constexpr (useOptimizedVersions) {
-        outputSquareWaveOptimized();
-        outputPwmOptimized();
-        setupLedBlinkerOptimized();
-    } else {
-        outputSquareWave(squareWave1, 300);
-        outputPwm(pwm1, 10000, 40000, 0.75f);
-        setupLedBlinker();
-    }
+    SysTimer sysTimer;
+    AvrTimer8 timer0 = Board::makeTimer8(Timer8Id::Timer0);
+    sysTimer.setupWith(timer0, F_CPU, 1000);
+    
+    // constexpr auto demo = squareWaveWrapperDemo;
+    // constexpr auto demo = squareWaveDirectDemo;
+    constexpr auto demo = pwmDirectDemo;
+    // constexpr auto demo = pwmWrapperDemo;
+    // constexpr auto demo = periodicInterruptDirectDemo;
+    // constexpr auto demo = periodicInterruptWrapperDemo;
 
+    demo();
+    
     Sys::enableInterrupts();
-    while (true)
-        ;
+    while (true) {
+        Board::makeGpio(BoardConfig::led).toggle();
+        _delay_ms(2000);
+        printf("t=%lu\n\r", sysTimer.getTime());
+    }
+        
 }

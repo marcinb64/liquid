@@ -106,14 +106,19 @@ public:
 
     static auto makeGpio(const GpioSpec &spec) { return liquid::Gpio(spec, spec.pin); }
 
-    static auto makePwmD9()
+    static auto makePwm(const GpioSpec &spec) -> PwmImpl
     {
-        return PwmImpl {AvrTimer16(timer16config[0]), CompareOutputChannel::ChannelA};
+        assert(spec.pwm16.timer != Timer16::None &&
+               spec.pwm16.channel != CompareOutputChannel::None);
+        return PwmImpl {makeTimer16(spec.pwm16.timer), spec.pwm16.channel};
     }
 
-    static auto makePwmD10()
+    static auto makeSquareWave(const GpioSpec &spec) -> SquareWaveImpl16
     {
-        return PwmImpl {AvrTimer16(timer16config[0]), CompareOutputChannel::ChannelB};
+        // Square wave uses CTC mode, only Compare Output Channel A can be used
+        assert(spec.pwm16.timer != Timer16::None &&
+               spec.pwm16.channel == CompareOutputChannel::ChannelA);
+        return SquareWaveImpl16(makeTimer16(spec.pwm16.timer));
     }
 
     static auto makeAdc() -> Adc { return Adc {new Adc::Impl(0x78)}; }

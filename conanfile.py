@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 class LiquidRecipe(ConanFile):
     name = "liquid"
-    version = "0.3.2"
+    version = "0.3.3"
 
     # Optional metadata
     license = "MIT"

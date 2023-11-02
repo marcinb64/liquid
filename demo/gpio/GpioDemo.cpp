@@ -7,7 +7,6 @@
 #include <util/delay.h>
 
 using namespace liquid;
-using Board = liquid::ArduinoMega;
 
 constexpr static auto DEBUG = false;
 constexpr static auto HEARTBEAT = false;

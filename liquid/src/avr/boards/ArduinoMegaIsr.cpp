@@ -9,7 +9,7 @@ using namespace liquid;
 namespace liquid
 {
 
-IrqHandler irqHandlers[5] = {};
+IrqHandler irqHandlers[Irq::Max] = {};
 
 auto installIrqHandler(int irq, const IrqHandler &handler) -> void
 {

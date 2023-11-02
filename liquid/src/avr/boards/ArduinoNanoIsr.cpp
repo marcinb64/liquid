@@ -9,7 +9,7 @@ using namespace liquid;
 namespace liquid
 {
 
-IrqHandler irqHandlers[5] = {};
+IrqHandler irqHandlers[Irq::Max] = {};
 
 auto installIrqHandler(int irq, const IrqHandler &handler) -> void
 {
@@ -31,6 +31,16 @@ ISR(PCINT1_vect)
 ISR(PCINT2_vect)
 {
     irqHandlers[Irq::Pcint1]();
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+    irqHandlers[Irq::Timer1CompA]();
+}
+
+ISR(TIMER0_COMPA_vect)
+{
+    irqHandlers[Irq::Timer0CompA]();
 }
 
 ISR(USART_UDRE_vect)
