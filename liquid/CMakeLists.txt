@@ -7,6 +7,7 @@ add_library(
     src/${LIQUID_PLATFORM}/Interrupts.cpp
     src/${LIQUID_PLATFORM}/AdcImpl.cpp
     src/${LIQUID_PLATFORM}/SysTimer.cpp
+    src/${LIQUID_PLATFORM}/AvrEeprom.cpp
     src/${LIQUID_PLATFORM}/boards/ArduinoNano.cpp
     src/${LIQUID_PLATFORM}/boards/ArduinoMega.cpp)
 

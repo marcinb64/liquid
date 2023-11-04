@@ -8,8 +8,6 @@
 
 using namespace liquid;
 
-constexpr static auto DEBUG = false;
-constexpr static auto HEARTBEAT = false;
 
 struct BoardConfig {
     static constexpr auto led = Board::Gpio::BuiltInLed;

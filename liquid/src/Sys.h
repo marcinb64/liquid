@@ -11,6 +11,17 @@ public:
 
     static auto enableInterrupts() -> void;
     static auto disableInterrupts() -> void;
+    static auto areInterruptsEnabled() -> bool;
+};
+
+class NoInterruptsGuard
+{
+public:
+    NoInterruptsGuard();
+    ~NoInterruptsGuard();
+
+private:
+    bool savedState;
 };
 
 } // namespace liquid
