@@ -9,5 +9,6 @@ extern uint8_t mock_mem[1024];
 
 auto mockMemReset() -> void;
 auto memAt(uint16_t addr) -> int;
+auto writeMemAt(uint16_t addr) -> uint8_t &;
 
 #endif

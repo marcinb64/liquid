@@ -5,3 +5,4 @@ set(COMMON_SOURCES
 add_subdirectory(gpio)
 add_subdirectory(timer)
 add_subdirectory(eeprom)
+add_subdirectory(i2c)

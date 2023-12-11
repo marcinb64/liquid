@@ -13,6 +13,11 @@ auto memAt(uint16_t addr) -> int
     return static_cast<int>(mock_mem[addr]);
 }
 
+auto writeMemAt(uint16_t addr) -> uint8_t &
+{
+    return mock_mem[addr];
+}
+
 namespace liquid
 {
 

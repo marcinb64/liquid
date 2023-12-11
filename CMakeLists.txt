@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 # Project definition
 project(
     liquid
-    VERSION 0.3.3
+    VERSION 0.3.4
     LANGUAGES CXX)
 
 # Build customization

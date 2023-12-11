@@ -14,12 +14,12 @@ constexpr static auto LOW  = 0;
 using Sfr8  = volatile uint8_t &;
 using Sfr16 = volatile uint16_t &;
 
-Sfr8 sfr8(uint16_t addr)
+inline Sfr8 sfr8(uint16_t addr)
 {
     return *(mock_mem + addr);
 }
 
-Sfr16 sfr16(uint16_t addr)
+inline Sfr16 sfr16(uint16_t addr)
 {
     return *reinterpret_cast<volatile uint16_t *>(mock_mem + addr);
 }

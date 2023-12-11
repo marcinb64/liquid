@@ -50,8 +50,8 @@ static AvrTimer16::Config t1cfg {
 
 TEST_CASE("AvrTimer8-CTC")
 {
-    AvrTimer8 t0(t0cfg);
     mockMemReset();
+    AvrTimer8 t0(t0cfg);
 
     SECTION("badFreq")
     {

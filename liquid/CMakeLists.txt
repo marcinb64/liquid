@@ -47,7 +47,11 @@ if (BUILD_TESTING)
 
     add_executable(utest_${MODULE_ID} 
         test/mockAvr.cpp
-        test/utest_timers.cpp)
+        test/utest_timers.cpp
+        test/utest_i2c.cpp
+        test/utest_utils.cpp)
+
+    target_compile_options(utest_${MODULE_ID} PRIVATE  -g -O0)
 
     target_include_directories(utest_${MODULE_ID} PRIVATE 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/test"

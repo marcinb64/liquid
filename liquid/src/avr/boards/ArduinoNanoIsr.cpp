@@ -47,3 +47,8 @@ ISR(USART_UDRE_vect)
 {
     callUsartIsr();
 }
+
+ISR(TWI_vect)
+{
+    irqHandlers[Irq::Twi]();
+}
