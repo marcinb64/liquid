@@ -325,7 +325,6 @@ private:
         case StatusCode::WriteAddressAckRxd:
             scanCallback(pendingAddress, true);
             if (++pendingAddress <= 127) {
-                writeAddr(++pendingAddress, Mode::Write);
                 TWCR().TWSTA = 1;
                 break;
             } else {
@@ -335,7 +334,6 @@ private:
         case StatusCode::WriteAddressNackRxd:
             scanCallback(pendingAddress, false);
             if (++pendingAddress <= 127) {
-                writeAddr(++pendingAddress, Mode::Write);
                 TWCR().TWSTA = 1;
                 break;
             } else {
@@ -397,6 +395,7 @@ private:
         status = pendingStatus;
         pendingStatus = Status::Unknown;
         mode_func = &AvrI2cController::idle;
+        readyCallback();
     }
 
     auto start() -> void
@@ -419,8 +418,6 @@ private:
         mode_func = &AvrI2cController::wait_for_stop_func;
         TWCR().TWSTA = 0;
         TWCR().TWSTO = 1;
-
-        readyCallback();
     }
 
     auto codeToStatus(uint8_t statusCode) -> Status
