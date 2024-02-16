@@ -1,10 +1,10 @@
 #ifndef LIQUID_AVRI2C_H_
 #define LIQUID_AVRI2C_H_
 
-#include <AvrInterrupts.h>
-#include <Interrupts.h>
-#include <Reg.h>
-#include <util.h>
+#include "AvrInterrupts.h"
+#include "../Interrupts.h"
+#include "../Reg.h"
+#include "../util.h"
 
 #include <assert.h>
 #include <math.h>
